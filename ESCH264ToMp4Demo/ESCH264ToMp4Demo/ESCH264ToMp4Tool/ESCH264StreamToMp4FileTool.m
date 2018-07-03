@@ -36,12 +36,21 @@ unsigned d = (darg);                    \
 @property (nonatomic) NSString *filePath;
 
 @property(nonatomic,assign) CGSize videoSize;
+
+@property(nonatomic,assign)NSInteger frameRate;
+
+@property(nonatomic,strong)NSData* sps;
+
+@property(nonatomic,strong)NSData* pps;
+
+@property(nonatomic,assign)BOOL spsAndppsWrite;
+
 @end
 const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
 
 @implementation ESCH264StreamToMp4FileTool
 
-- (instancetype) initWithVideoSize:(CGSize) videoSize filePath:(NSString *)filePath{
+- (instancetype) initWithVideoSize:(CGSize) videoSize filePath:(NSString *)filePath frameRate:(NSInteger)frameRate{
     if (self = [super init]) {
         _videoSize = videoSize;
         self.filePath = [filePath copy];
@@ -51,6 +60,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
         NSError *error = nil;
         NSURL *outputUrl = [NSURL fileURLWithPath:self.filePath];
         _assetWriter = [[AVAssetWriter alloc] initWithURL:outputUrl fileType:AVFileTypeMPEG4 error:&error];
+        self.frameRate = frameRate;
     }
     return self;
 }
@@ -121,7 +131,89 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     return data;
 }
 
-- (void) pushH264Data:(unsigned char *)dataBuffer length:(uint32_t)len{
+- (void)pushH264DataContentSpsAndPpsData:(NSData *)h264Data {
+    uint8_t *videoData = (uint8_t*)[h264Data bytes];
+    
+    NaluUnit naluUnit;
+    int frame_size = 0;
+    int cur_pos = 0;
+    while([ESCH264StreamToMp4FileTool ESCReadOneNaluFromAnnexBFormatH264WithNalu:&naluUnit buf:videoData buf_size:h264Data.length cur_pos:&cur_pos]) {
+        if(naluUnit.type == NAL_SPS || naluUnit.type == NAL_PPS || naluUnit.type == NAL_SEI) {
+            if (naluUnit.type == NAL_SPS) {
+                self.sps = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
+            } else if(naluUnit.type == NAL_PPS) {
+                self.pps = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
+            } else {
+                continue;
+            }
+            if (self.sps && self.pps && self.spsAndppsWrite == NO) {
+                [self setupWithSPS:self.sps PPS:self.pps];
+                self.spsAndppsWrite = YES;
+            }
+            continue;
+        }
+        //获取NALUS的长度，开辟内存
+        frame_size += naluUnit.size;
+        BOOL isIFrame = NO;
+        if (naluUnit.type == NAL_SLICE_IDR) {
+            isIFrame = YES;
+        }
+        frame_size = naluUnit.size + 4;
+        uint8_t *frame_data = (uint8_t *) calloc(1, frame_size);//avcc header 占用4个字节
+        uint32_t littleLength = CFSwapInt32HostToBig(naluUnit.size);
+        uint8_t *lengthAddress = (uint8_t*)&littleLength;
+        memcpy(frame_data, lengthAddress, 4);
+        memcpy(frame_data+4, naluUnit.data, naluUnit.size);
+        
+        [self pushH264Data:frame_data length:frame_size];
+        
+        free(frame_data);
+    }
+    
+}
+
+/**
+ *  从data流中读取1个NALU
+ *
+ *  @param nalu     NaluUnit
+ *  @param buf      data流指针
+ *  @param buf_size data流长度
+ *  @param cur_pos  当前位置
+ *
+ *  @return 成功 or 失败
+ */
++ (BOOL)ESCReadOneNaluFromAnnexBFormatH264WithNalu:(NaluUnit *)nalu buf:(unsigned char *)buf buf_size:(NSInteger)buf_size cur_pos:(int *)cur_pos {
+    int i = *cur_pos;
+    while(i + 2 < buf_size)
+    {
+        if(buf[i] == 0x00 && buf[i+1] == 0x00 && buf[i+2] == 0x01) {
+            i = i + 3;
+            int pos = i;
+            while (pos + 2 < buf_size)
+            {
+                if(buf[pos] == 0x00 && buf[pos+1] == 0x00 && buf[pos+2] == 0x01)
+                    break;
+                pos++;
+            }
+            if(pos+2 == buf_size) {
+                (*nalu).size = pos+2-i;
+            } else {
+                while(buf[pos-1] == 0x00)
+                    pos--;
+                (*nalu).size = pos-i;
+            }
+            (*nalu).type = buf[i] & 0x1f;
+            (*nalu).data = buf + i;
+            *cur_pos = pos;
+            return true;
+        } else {
+            i++;
+        }
+    }
+    return false;
+}
+
+- (void)pushH264Data:(unsigned char *)dataBuffer length:(uint32_t)len{
     if (_assetWriter.status == AVAssetWriterStatusUnknown) {
         NSLog(@"_assetWriter status not ready");
         return;
@@ -137,8 +229,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     CFRelease(h264Sample);
 }
 
-- (CMSampleBufferRef)sampleBufferWithData:(NSData*)data formatDescriptor:(CMFormatDescriptionRef)formatDescription
-{
+- (CMSampleBufferRef)sampleBufferWithData:(NSData*)data formatDescriptor:(CMFormatDescriptionRef)formatDescription {
     OSStatus result;
     
     CMSampleBufferRef sampleBuffer = NULL;
@@ -215,7 +306,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
 
 
 - (CMTime) timeWithFrame:(int) frameIndex{
-    int64_t pts = (frameIndex*40ll) *(TIME_SCALE/1000);
+    int64_t pts = (frameIndex * (1000.0 / self.frameRate)) *(TIME_SCALE/1000);
     NSLog(@"pts:%lld",pts);
     return CMTimeMake(pts, TIME_SCALE);
 }

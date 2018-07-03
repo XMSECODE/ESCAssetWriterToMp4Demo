@@ -30,11 +30,15 @@ typedef struct _NaluUnit
 
 @interface ESCH264StreamToMp4FileTool : NSObject
 
-- (instancetype) initWithVideoSize:(CGSize) videoSize filePath:(NSString *)filePath;
+- (instancetype)initWithVideoSize:(CGSize) videoSize filePath:(NSString *)filePath frameRate:(NSInteger)frameRate;
 
-- (void) setupWithSPS:(NSData *)sps PPS:(NSData *)pps;
+- (void)pushH264DataContentSpsAndPpsData:(NSData *)h264Data;
 
-- (void) pushH264Data:(unsigned char *)dataBuffer length:(uint32_t)len;
+- (void)endWritingCompletionHandler:(void (^)(void))handler;
 
-- (void) endWritingCompletionHandler:(void (^)(void))handler;
+
+
+
+
+
 @end

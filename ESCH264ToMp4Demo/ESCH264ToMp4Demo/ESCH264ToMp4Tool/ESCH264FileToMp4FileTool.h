@@ -11,8 +11,6 @@
 
 @interface ESCH264FileToMp4FileTool : NSObject
 
-+ (void)ESCH264FileToMp4FileToolWithh264FilePath:(NSString *)h264FilePath mp4FilePath:(NSString *)mp4FilePath videoWidth:(NSInteger)width videoHeight:(NSInteger)height;
-
-+ (BOOL)ESCReadOneNaluFromAnnexBFormatH264WithNalu:(NaluUnit *)nalu buf:(unsigned char *)buf buf_size:(NSInteger)buf_size cur_pos:(int *)cur_pos;
++ (void)ESCH264FileToMp4FileToolWithh264FilePath:(NSString *)h264FilePath mp4FilePath:(NSString *)mp4FilePath videoWidth:(NSInteger)width videoHeight:(NSInteger)height frameRate:(NSInteger)frameRate;
 
 @end
