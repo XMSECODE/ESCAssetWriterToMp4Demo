@@ -1,13 +1,12 @@
 //
-//  H264ToMp4.m
-//  MTLiveStreamingKit
+//  ESCH264View.m
+//  ESCH264ToMp4Demo
 //
-//  Created by 包红来 on 2017/6/16.
-//  Copyright © 2017年 LGW. All rights reserved.
+//  Created by xiang on 2018/7/3.
+//  Copyright © 2018年 xiang. All rights reserved.
 //
 
-#import "ESCH264StreamToMp4FileTool.h"
-#include <mach/mach_time.h>
+#import "ESCH264View.h"
 
 #define AV_W8(p, v) *(p) = (v)
 
@@ -19,9 +18,29 @@ unsigned d = (darg);                    \
 } while(0)
 #endif
 
+#define NAL_SLICE 1
+#define NAL_SLICE_DPA 2
+#define NAL_SLICE_DPB 3
+#define NAL_SLICE_DPC 4
+#define NAL_SLICE_IDR 5
+#define NAL_SEI 6
+#define NAL_SPS 7
+#define NAL_PPS 8
+#define NAL_AUD 9
+#define NAL_FILLER 12
 
+typedef struct _NaluUnit
+{
+    int type; //IDR or INTER：note：SequenceHeader is IDR too
+    int size; //note: don't contain startCode
+    unsigned char *data; //note: don't contain startCode
+} NaluUnit;
 
-@interface ESCH264StreamToMp4FileTool()
+static int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
+
+@interface ESCH264View ()
+
+@property(nonatomic,weak)AVSampleBufferDisplayLayer* avslayer;
 
 @property(nonatomic,assign)CMFormatDescriptionRef videoFormat;
 
@@ -29,17 +48,7 @@ unsigned d = (darg);                    \
 
 @property(nonatomic,assign)int frameIndex;
 
-@property(nonatomic,strong)AVAssetWriterInput* videoWriteInput;
-
-@property(nonatomic,strong)AVAssetWriter* assetWriter;
-
-@property (nonatomic) CGFloat rotate;
-
 @property (nonatomic) NSString *filePath;
-
-@property(nonatomic,assign) CGSize videoSize;
-
-@property(nonatomic,assign)NSInteger frameRate;
 
 @property(nonatomic,strong)NSData* sps;
 
@@ -48,29 +57,33 @@ unsigned d = (darg);                    \
 @property(nonatomic,assign)BOOL spsAndppsWrite;
 
 @end
-const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
 
-@implementation ESCH264StreamToMp4FileTool
+@implementation ESCH264View
 
-- (instancetype) initWithVideoSize:(CGSize) videoSize filePath:(NSString *)filePath frameRate:(NSInteger)frameRate{
-    if (self = [super init]) {
-        _videoSize = videoSize;
-        self.filePath = [filePath copy];
-        NSLog(@"H264ToMp4 setup start");
-        unlink([self.filePath UTF8String]);//删除该文件,c语言用法
-        [[NSFileManager defaultManager] removeItemAtPath:self.filePath error:nil];
-        NSError *error = nil;
-        NSURL *outputUrl = [NSURL fileURLWithPath:self.filePath];
-        _assetWriter = [[AVAssetWriter alloc] initWithURL:outputUrl fileType:AVFileTypeMPEG4 error:&error];
-        self.frameRate = frameRate;
++ (Class)layerClass {
+    return [AVSampleBufferDisplayLayer class];
+}
+
+- (void)showSampBuff:(CMSampleBufferRef)sampleBuffer {
+    if (self.avslayer == nil) {
+        self.avslayer = (AVSampleBufferDisplayLayer *)self.layer;
     }
-    return self;
+    CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
+    CFMutableDictionaryRef dict = (CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0);
+    CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
+    
+    if ([self.avslayer isReadyForMoreMediaData]) {
+        if ([NSThread isMainThread]) {
+            [self.avslayer enqueueSampleBuffer:sampleBuffer];
+        }else {
+            dispatch_sync(dispatch_get_main_queue(),^{
+                [self.avslayer enqueueSampleBuffer:sampleBuffer];
+            });
+        }
+    }
 }
 
 - (void) setupWithSPS:(NSData *)sps PPS:(NSData *)pps {
-    if (self.videoWriteInput != nil) {
-        return;
-    }
     
     const CFStringRef avcCKey = CFSTR("avcC");
     const CFDataRef avcCValue = [self avccExtradataCreate:sps PPS:pps];
@@ -83,19 +96,8 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     CFDictionaryRef extensionDict = CFDictionaryCreate(kCFAllocatorDefault, extensionDictKeys, extensionDictValues, 1, nil, nil);
     
     CMVideoFormatDescriptionCreate(kCFAllocatorDefault, kCMVideoCodecType_H264, self.videoSize.width, self.videoSize.height, extensionDict, &_videoFormat);
-    _videoWriteInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:nil sourceFormatHint:_videoFormat];
     
-    if ([_assetWriter canAddInput:_videoWriteInput]) {
-        [_assetWriter addInput:_videoWriteInput];
-    }
-    _videoWriteInput.expectsMediaDataInRealTime = YES;
     _startTime = CMTimeMake(0, TIME_SCALE);
-    if ([_assetWriter startWriting]) {
-        [_assetWriter startSessionAtSourceTime:_startTime];
-        NSLog(@"H264ToMp4 setup success");
-    } else {
-        NSLog(@"[Error] startWritinge error:%@",_assetWriter.error);
-    };
 }
 
 - (CFDataRef) avccExtradataCreate:(NSData *)sps PPS:(NSData *) pps {
@@ -139,7 +141,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     NaluUnit naluUnit;
     int frame_size = 0;
     int cur_pos = 0;
-    while([ESCH264StreamToMp4FileTool ESCReadOneNaluFromAnnexBFormatH264WithNalu:&naluUnit buf:videoData buf_size:h264Data.length cur_pos:&cur_pos]) {
+    while([ESCH264View ESCReadOneNaluFromAnnexBFormatH264WithNalu:&naluUnit buf:videoData buf_size:h264Data.length cur_pos:&cur_pos]) {
         if(naluUnit.type == NAL_SPS || naluUnit.type == NAL_PPS || naluUnit.type == NAL_SEI) {
             if (naluUnit.type == NAL_SPS) {
                 self.sps = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
@@ -216,18 +218,9 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
 }
 
 - (void)pushH264Data:(unsigned char *)dataBuffer length:(uint32_t)len{
-    if (_assetWriter.status == AVAssetWriterStatusUnknown) {
-        NSLog(@"_assetWriter status not ready");
-        return;
-    }
     NSData *h264Data = [NSData dataWithBytes:dataBuffer length:len];
     CMSampleBufferRef h264Sample = [self sampleBufferWithData:h264Data formatDescriptor:_videoFormat];
-    if ([_videoWriteInput isReadyForMoreMediaData]) {
-        [_videoWriteInput appendSampleBuffer:h264Sample];
-        NSLog(@"appendSampleBuffer success");
-    } else {
-        NSLog(@"_videoWriteInput isReadyForMoreMediaData NO status:%ld",(long)_assetWriter.status);
-    }
+    [self showSampBuff:h264Sample];
     CFRelease(h264Sample);
 }
 
@@ -239,7 +232,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     size_t data_len = data.length;
     
     // _blockBuffer is a CMBlockBufferRef instance variable
-   
+    
     size_t blockLength = 100*1024;
     result = CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault,
                                                 NULL,
@@ -288,27 +281,14 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
         return NULL;
     }
     _frameIndex ++;
-
+    
     // check error
     
     return sampleBuffer;
 }
 
-- (void) endWritingCompletionHandler:(void (^)(void))handler {
-     CMTime time = [self timeWithFrame:_frameIndex];
-    [_videoWriteInput markAsFinished];
-    [_assetWriter endSessionAtSourceTime:time];
-    [_assetWriter finishWritingWithCompletionHandler:^{
-        NSLog(@"finishWriting");
-        if (handler) {
-            handler();
-        }
-    }];
-}
-
-
 - (CMTime) timeWithFrame:(int) frameIndex{
-    int64_t pts = (frameIndex * (1000.0 / self.frameRate)) *(TIME_SCALE/1000);
+    int64_t pts = (frameIndex * (1000.0 / 40)) *(TIME_SCALE/1000);
     NSLog(@"pts:%lld",pts);
     return CMTimeMake(pts, TIME_SCALE);
 }

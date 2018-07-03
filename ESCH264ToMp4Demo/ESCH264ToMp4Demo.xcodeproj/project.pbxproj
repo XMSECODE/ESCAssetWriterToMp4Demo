@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F0064F6920EB7B7900973C2F /* ESCH264View.m in Sources */ = {isa = PBXBuildFile; fileRef = F0064F6820EB7B7900973C2F /* ESCH264View.m */; };
 		F07056BC20E0815400D35E6A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F07056BB20E0815400D35E6A /* AppDelegate.m */; };
 		F07056BF20E0815400D35E6A /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F07056BE20E0815400D35E6A /* ViewController.m */; };
 		F07056C220E0815400D35E6A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F07056C020E0815400D35E6A /* Main.storyboard */; };
@@ -21,6 +22,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F0064F6720EB7B7900973C2F /* ESCH264View.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ESCH264View.h; sourceTree = "<group>"; };
+		F0064F6820EB7B7900973C2F /* ESCH264View.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ESCH264View.m; sourceTree = "<group>"; };
 		F07056B720E0815400D35E6A /* ESCH264ToMp4Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ESCH264ToMp4Demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F07056BA20E0815400D35E6A /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		F07056BB20E0815400D35E6A /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -51,6 +54,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		F0064F6A20EB808800973C2F /* ESCH264View */ = {
+			isa = PBXGroup;
+			children = (
+				F0064F6720EB7B7900973C2F /* ESCH264View.h */,
+				F0064F6820EB7B7900973C2F /* ESCH264View.m */,
+			);
+			path = ESCH264View;
+			sourceTree = "<group>";
+		};
 		F07056AE20E0815400D35E6A = {
 			isa = PBXGroup;
 			children = (
@@ -70,6 +82,7 @@
 		F07056B920E0815400D35E6A /* ESCH264ToMp4Demo */ = {
 			isa = PBXGroup;
 			children = (
+				F0064F6A20EB808800973C2F /* ESCH264View */,
 				F0DCA67120E36094000BDA7E /* ESCH264ToMp4Tool */,
 				F0DCA67020E36088000BDA7E /* source */,
 				F07056BA20E0815400D35E6A /* AppDelegate.h */,
@@ -179,6 +192,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F0064F6920EB7B7900973C2F /* ESCH264View.m in Sources */,
 				F07056BF20E0815400D35E6A /* ViewController.m in Sources */,
 				F09A322A20E2361B00BB7006 /* ESCH264FileToMp4FileTool.m in Sources */,
 				F07056CA20E0816100D35E6A /* main.m in Sources */,
