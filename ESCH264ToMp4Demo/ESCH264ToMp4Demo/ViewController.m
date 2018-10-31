@@ -58,7 +58,7 @@
     while([self ESCReadOneNaluFromAnnexBFormatH264WithNalu:&naluUnit buf:videoData buf_size:allData.length cur_pos:&cur_pos]) {
         NSData *data = [NSData dataWithBytes:naluUnit.data - 3 length:naluUnit.size + 3];
         [self.h264View pushH264DataContentSpsAndPpsData:data];
-        [NSThread sleepForTimeInterval:0.25];
+        [NSThread sleepForTimeInterval:0.04];
     }
 }
 

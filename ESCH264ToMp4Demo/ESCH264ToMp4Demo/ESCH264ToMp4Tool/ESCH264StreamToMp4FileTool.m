@@ -31,6 +31,8 @@ unsigned d = (darg);                    \
 
 @property(nonatomic,strong)AVAssetWriterInput* videoWriteInput;
 
+@property(nonatomic,strong)AVAssetWriterInput* audioWriteInput;
+
 @property(nonatomic,strong)AVAssetWriter* assetWriter;
 
 @property (nonatomic) CGFloat rotate;
@@ -129,6 +131,69 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     assert(p - extradata == extradata_size);
     
     data = CFDataCreate(kCFAllocatorDefault, extradata, extradata_size);
+    NSLog(@"%@==%@==%@",data,sps,pps);
+    free(extradata);
+    return data;
+}
+
+- (CFDataRef) hevcExtradataCreate:(NSData *)sps PPS:(NSData *) pps VPS:(NSData *)vps {
+    CFDataRef data = NULL;
+    uint8_t *sps_data = (uint8_t*)[sps bytes];
+    uint8_t *pps_data = (uint8_t*)[pps bytes];
+    int sps_data_size = (int)sps.length;
+    int pps_data_size = (int)pps.length;
+    uint8_t *p;
+    int extradata_size = 6 + 2 + sps_data_size + 3 + pps_data_size;
+    uint8_t *extradata = calloc(1, extradata_size);
+    if (!extradata){
+        return NULL;
+    }
+    p = extradata;
+    
+    //bits          type
+    //8             configurationVersion always 0x01
+    p[0] = 1;
+    //2             general_profile_space   1   general_tier_flag   5   general_profile_idc
+    //32            general_profile_compatibility_flags
+    //48            general_constraint_indicator_flags
+    //8             general_level_idc
+    //4             reserved('1111')
+    //12            min_spatial_segmentation_idc
+    //6             reserved('111111')  2   parallelismType
+    //6             reserved('111111')  2   chromaFormat
+    //5             reserved('11111')   3   bitDepathLumaMinus8
+    //5             reserved('11111')   3   bitDepthChromaMinus8
+    //16            avgFrameRate
+    //2             constantFrameRate
+    //2             constantFrameRate   3   numTemporalLayers   1   temporalIdNested    2   lengthSizeMinusOne
+    //8             numOfArrays
+    //              -- repeated of Array(VPS/SPS/PPS)   --
+    //1             arry_completeness   1   reserved(0)
+    //16            numNalus
+    //              --repeated once per NAL --
+    //16            nalUnitLength
+    //N             NALU data
+    
+    
+    
+    AV_W8(p + 0, 1); /* version */
+    AV_W8(p + 1, sps_data[1]); /* profile */
+    AV_W8(p + 2, sps_data[2]); /* profile compat */
+    AV_W8(p + 3, sps_data[3]); /* level */
+    AV_W8(p + 4, 0xff); /* 6 bits reserved (111111) + 2 bits nal size length - 1 (11) */
+    AV_W8(p + 5, 0xe1); /* 3 bits reserved (111) + 5 bits number of sps (00001) */
+    AV_WB16(p + 6, sps_data_size);
+    memcpy(p + 8,sps_data, sps_data_size);
+    p += 8 + sps_data_size;
+    AV_W8(p + 0, 1); /* number of pps */
+    AV_WB16(p + 1, pps_data_size);
+    memcpy(p + 3, pps_data, pps_data_size);
+    
+    p += 3 + pps_data_size;
+    assert(p - extradata == extradata_size);
+    
+    data = CFDataCreate(kCFAllocatorDefault, extradata, extradata_size);
+    NSLog(@"%@==%@==%@",data,sps,pps);
     free(extradata);
     return data;
 }
