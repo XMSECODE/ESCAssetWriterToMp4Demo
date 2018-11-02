@@ -137,61 +137,153 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
 }
 
 - (CFDataRef) hevcExtradataCreate:(NSData *)sps PPS:(NSData *) pps VPS:(NSData *)vps {
+    NSArray *extradataArray = @[vps,sps,pps];
+    int totalLength = 23 + 15 + (int)sps.length + (int)pps.length + (int)vps.length;
+    
     CFDataRef data = NULL;
-    uint8_t *sps_data = (uint8_t*)[sps bytes];
-    uint8_t *pps_data = (uint8_t*)[pps bytes];
     int sps_data_size = (int)sps.length;
     int pps_data_size = (int)pps.length;
     uint8_t *p;
     int extradata_size = 6 + 2 + sps_data_size + 3 + pps_data_size;
-    uint8_t *extradata = calloc(1, extradata_size);
+    uint8_t *extradata = calloc(1, totalLength);
     if (!extradata){
         return NULL;
     }
     p = extradata;
     
+    //2
+    uint8_t general_profile_space = 1;
+    //1
+    uint8_t general_tier_flag = 1;
+    //5
+    uint8_t general_profile_idc = 1;
+    //32
+    uint general_profile_compatibility_flags = 1;
+    //48
+    uint8_t general_constraint_indicator_flags[6] = {};
+    //8
+    uint8_t general_level_idc = 1;
+    //12
+    uint min_spatial_segmentation_idc = 1;
+    //2
+    uint8_t parallelismType = 1;
+    //2
+    uint8_t chromaFormat = 1;
+    //3
+    uint8_t bitDepathLumaMinus8 = 1;
+    //3
+    uint8_t bitDepthChromaMinus8 = 1;
+    //16
+    uint avgFrameRate = 1;
+    //2
+    uint8_t constantFrameRate = 1;
+    //3
+    uint8_t numTemporalLayers = 1;
+    //1
+    uint8_t temporalIdNested = 1;
+    //2
+    uint8_t lengthSizeMinusOne = 1;
+    //8
+    uint8_t numOfArrays = 1;
+    //1
+    uint8_t arry_completeness = 0;
+    
     //bits          type
     //8             configurationVersion always 0x01
     p[0] = 1;
-    //2             general_profile_space   1   general_tier_flag   5   general_profile_idc
+    //2              general_profile_space
+    p[1] = general_profile_space & 0xc0;
+    //1                general_tier_flag
+    general_tier_flag = general_tier_flag << 5;
+    p[1] = p[1] | general_tier_flag;
+    //5              general_profile_idc
+    p[1] = p[1] | general_profile_idc;
     //32            general_profile_compatibility_flags
+    memcpy(p[2], (void *)&general_profile_compatibility_flags, 4);
     //48            general_constraint_indicator_flags
+    memcpy(p[6], (void *)&general_constraint_indicator_flags, 6);
     //8             general_level_idc
+    p[12] = general_level_idc;
     //4             reserved('1111')
+    p[13] = 0xf0;
     //12            min_spatial_segmentation_idc
-    //6             reserved('111111')  2   parallelismType
-    //6             reserved('111111')  2   chromaFormat
-    //5             reserved('11111')   3   bitDepathLumaMinus8
-    //5             reserved('11111')   3   bitDepthChromaMinus8
+    uint8_t min_spatial_segmentation_idc_4 = min_spatial_segmentation_idc & 0x00ff0000;
+    uint8_t min_spatial_segmentation_idc_8 = min_spatial_segmentation_idc & 0x0000ffff;
+    p[13] = p[13] | min_spatial_segmentation_idc_4;
+    p[14] = min_spatial_segmentation_idc_8;
+    //6             reserved('111111')
+    p[15] = 0xfc;
+    //2             parallelismType
+    parallelismType = parallelismType & 0x03;
+    p[15] = p[15] | parallelismType;
+    //6             reserved('111111')
+    p[16] = 0xfc;
+    //2   chromaFormat
+    chromaFormat = chromaFormat & 0x03;
+    p[16] = p[16] | chromaFormat;
+    //5             reserved('11111')
+    p[17] = 0xf8;
+    //3            bitDepathLumaMinus8
+    bitDepathLumaMinus8 = bitDepathLumaMinus8 & 0x07;
+    p[17] = p[17] | bitDepathLumaMinus8;
+    //5             reserved('11111')
+    p[18] = 0xf8;
+    //3            bitDepthChromaMinus8
+    bitDepthChromaMinus8 = bitDepthChromaMinus8 & 0x07;
+    p[18] = p[18] | bitDepthChromaMinus8;
     //16            avgFrameRate
+    uint8_t avgFrameRate_1_byte = avgFrameRate & 0x0000ff00;
+    uint8_t avgFrameRate_2_byte = avgFrameRate & 0x000000ff;
+    p[19] = avgFrameRate_1_byte;
+    p[20] = avgFrameRate_2_byte;
     //2             constantFrameRate
-    //2             constantFrameRate   3   numTemporalLayers   1   temporalIdNested    2   lengthSizeMinusOne
+    constantFrameRate = constantFrameRate & 0xc0;
+    p[21] = constantFrameRate;
+    //3             numTemporalLayers
+    numTemporalLayers = numTemporalLayers & 0x38;
+    p[21] = p[21] | numTemporalLayers;
+    //1            temporalIdNested
+    temporalIdNested = temporalIdNested & 0x04;
+    p[21] = p[21] | temporalIdNested;
+    //2            lengthSizeMinusOne
+    lengthSizeMinusOne = lengthSizeMinusOne & 0x03;
+    p[21] = p[21] | lengthSizeMinusOne;
     //8             numOfArrays
+    p[22] = numOfArrays;
     //              -- repeated of Array(VPS/SPS/PPS)   --
-    //1             arry_completeness   1   reserved(0)
-    //16            numNalus
-    //              --repeated once per NAL --
-    //16            nalUnitLength
-    //N             NALU data
-    
-    
-    
-    AV_W8(p + 0, 1); /* version */
-    AV_W8(p + 1, sps_data[1]); /* profile */
-    AV_W8(p + 2, sps_data[2]); /* profile compat */
-    AV_W8(p + 3, sps_data[3]); /* level */
-    AV_W8(p + 4, 0xff); /* 6 bits reserved (111111) + 2 bits nal size length - 1 (11) */
-    AV_W8(p + 5, 0xe1); /* 3 bits reserved (111) + 5 bits number of sps (00001) */
-    AV_WB16(p + 6, sps_data_size);
-    memcpy(p + 8,sps_data, sps_data_size);
-    p += 8 + sps_data_size;
-    AV_W8(p + 0, 1); /* number of pps */
-    AV_WB16(p + 1, pps_data_size);
-    memcpy(p + 3, pps_data, pps_data_size);
-    
-    p += 3 + pps_data_size;
-    assert(p - extradata == extradata_size);
-    
+    int j = 0;
+    for (int i = 0; i < numOfArrays;) {
+        //1             arry_completeness
+        arry_completeness = arry_completeness & 0x80;
+        p[22 + i] = arry_completeness;
+        //1            reserved(0)
+        //6             NAL_unit_type
+        if (j == 0) {
+            //vps
+            p[22 + i] = p[22 + i] | 0x20;
+        }else if (j == 1) {
+            p[22 + i] = p[22 + i] | 0x21;
+        }else if (j == 2) {
+            p[22 + i] = p[22 + i] | 0x22;
+        }
+        //16            numNalus
+        p[22 + i + 1] = 0x00;
+        p[22 + i + 2] = 0x01;
+        //              --repeated once per NAL --
+        NSData *naluData = extradataArray[j];
+        //16            nalUnitLength
+        int naluLength = (int)naluData.length;
+        uint8_t naluLength_one = naluLength & 0x0000ff00;
+        uint8_t naluLength_two = naluLength & 0x000000ff;
+        p[22 + i + 3] = naluLength_one;
+        p[22 + i + 4] = naluLength_two;
+        //N             NALU data
+        const void *pNaluData = [naluData bytes];
+        memcpy(p[22 + i + 5], pNaluData, naluLength);
+        j++;
+        i += 1 + 2 + 2 + naluLength;
+    }
+ 
     data = CFDataCreate(kCFAllocatorDefault, extradata, extradata_size);
     NSLog(@"%@==%@==%@",data,sps,pps);
     free(extradata);
