@@ -20,6 +20,14 @@
 #define NAL_AUD 9
 #define NAL_FILLER 12
 
+
+#define H265_NAL_VPS    32
+#define H265_NAL_SPS    33
+#define H265_NAL_PPS    34
+#define H265_NAL_SEI    39
+#define H265_NAL_IDR    19
+#define H265_NAL_SS     1
+
 typedef struct _NaluUnit
 {
     int type; //IDR or INTER：note：SequenceHeader is IDR too
@@ -32,6 +40,8 @@ typedef struct _NaluUnit
 - (instancetype)initWithVideoSize:(CGSize) videoSize filePath:(NSString *)filePath frameRate:(NSInteger)frameRate;
 
 - (void)pushH264DataContentSpsAndPpsData:(NSData *)h264Data;
+
+- (void)pushH265DataContentSpsAndPpsData:(NSData *)h265Data;
 
 - (void)endWritingCompletionHandler:(void (^)(void))handler;
 

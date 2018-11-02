@@ -47,6 +47,10 @@ unsigned d = (darg);                    \
 
 @property(nonatomic,strong)NSData* pps;
 
+@property(nonatomic,strong)NSData* vps;
+
+@property(nonatomic,strong)NSData* sei;
+
 @property(nonatomic,assign)BOOL spsAndppsWrite;
 
 @end
@@ -100,6 +104,37 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     };
 }
 
+- (void) setupH265WithSPS:(NSData *)sps PPS:(NSData *)pps vps:(NSData *)vps{
+    if (self.videoWriteInput != nil) {
+        return;
+    }
+    
+    const CFStringRef hevcKey = CFSTR("hevc");
+    const CFDataRef hevcValue = [self hevcExtradataCreate:sps PPS:pps VPS:vps];
+    const void *atomDictKeys[] = { hevcKey };
+    const void *atomDictValues[] = { hevcValue };
+    CFDictionaryRef atomsDict = CFDictionaryCreate(kCFAllocatorDefault, atomDictKeys, atomDictValues, 1, nil, nil);
+    
+    const void *extensionDictKeys[] = { kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms };
+    const void *extensionDictValues[] = { atomsDict };
+    CFDictionaryRef extensionDict = CFDictionaryCreate(kCFAllocatorDefault, extensionDictKeys, extensionDictValues, 1, nil, nil);
+    
+    CMVideoFormatDescriptionCreate(kCFAllocatorDefault, kCMVideoCodecType_HEVC, self.videoSize.width, self.videoSize.height, extensionDict, &_videoFormat);
+    _videoWriteInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:nil sourceFormatHint:_videoFormat];
+    
+    if ([_assetWriter canAddInput:_videoWriteInput]) {
+        [_assetWriter addInput:_videoWriteInput];
+    }
+    _videoWriteInput.expectsMediaDataInRealTime = YES;
+    _startTime = CMTimeMake(0, TIME_SCALE);
+    if ([_assetWriter startWriting]) {
+        [_assetWriter startSessionAtSourceTime:_startTime];
+        NSLog(@"H265ToMp4 setup success");
+    } else {
+        NSLog(@"[Error] startWritinge error:%@",_assetWriter.error);
+    };
+}
+
 - (CFDataRef) avccExtradataCreate:(NSData *)sps PPS:(NSData *) pps {
     CFDataRef data = NULL;
     uint8_t *sps_data = (uint8_t*)[sps bytes];
@@ -136,55 +171,52 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     return data;
 }
 
-- (CFDataRef) hevcExtradataCreate:(NSData *)sps PPS:(NSData *) pps VPS:(NSData *)vps {
+- (CFDataRef)hevcExtradataCreate:(NSData *)sps PPS:(NSData *) pps VPS:(NSData *)vps {
     NSArray *extradataArray = @[vps,sps,pps];
-    int totalLength = 23 + 15 + (int)sps.length + (int)pps.length + (int)vps.length;
+    int extradata_size = 23 + 15 + (int)sps.length + (int)pps.length + (int)vps.length;
     
     CFDataRef data = NULL;
-    int sps_data_size = (int)sps.length;
-    int pps_data_size = (int)pps.length;
     uint8_t *p;
-    int extradata_size = 6 + 2 + sps_data_size + 3 + pps_data_size;
-    uint8_t *extradata = calloc(1, totalLength);
+    uint8_t *extradata = calloc(1, extradata_size);
     if (!extradata){
         return NULL;
     }
     p = extradata;
     
     //2
-    uint8_t general_profile_space = 1;
+    uint8_t general_profile_space = 0;
     //1
-    uint8_t general_tier_flag = 1;
+    uint8_t general_tier_flag = 0;
     //5
-    uint8_t general_profile_idc = 1;
+    uint8_t general_profile_idc = 0;
     //32
-    uint general_profile_compatibility_flags = 1;
+    uint general_profile_compatibility_flags = 0;
     //48
-    uint8_t general_constraint_indicator_flags[6] = {};
+    uint8_t general_constraint_indicator_flags[6] = {0};
     //8
-    uint8_t general_level_idc = 1;
+    uint8_t general_level_idc = 0;
     //12
-    uint min_spatial_segmentation_idc = 1;
+    uint min_spatial_segmentation_idc = 0;
     //2
-    uint8_t parallelismType = 1;
+    uint8_t parallelismType = 0;
     //2
-    uint8_t chromaFormat = 1;
+    uint8_t chromaFormat = 0;
     //3
-    uint8_t bitDepathLumaMinus8 = 1;
+    uint8_t bitDepathLumaMinus8 = 0;
     //3
-    uint8_t bitDepthChromaMinus8 = 1;
+    uint8_t bitDepthChromaMinus8 = 0;
     //16
-    uint avgFrameRate = 1;
+    uint avgFrameRate = 0;
     //2
-    uint8_t constantFrameRate = 1;
+    uint8_t constantFrameRate = 0;
     //3
-    uint8_t numTemporalLayers = 1;
+    uint8_t numTemporalLayers = 0;
     //1
-    uint8_t temporalIdNested = 1;
+    uint8_t temporalIdNested = 0;
     //2
-    uint8_t lengthSizeMinusOne = 1;
+    uint8_t lengthSizeMinusOne = 3;
     //8
-    uint8_t numOfArrays = 1;
+    uint8_t numOfArrays = 3;
     //1
     uint8_t arry_completeness = 0;
     
@@ -199,9 +231,19 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     //5              general_profile_idc
     p[1] = p[1] | general_profile_idc;
     //32            general_profile_compatibility_flags
-    memcpy(p[2], (void *)&general_profile_compatibility_flags, 4);
+//    memcpy(p[2], (void *)&general_profile_compatibility_flags, 4);
+    p[2] = 0;
+    p[3] = 0;
+    p[4] = 0;
+    p[5] = 0;
     //48            general_constraint_indicator_flags
-    memcpy(p[6], (void *)&general_constraint_indicator_flags, 6);
+//    memcpy(p[6], (void *)general_constraint_indicator_flags, 6);
+    p[6] = 0;
+    p[7] = 0;
+    p[8] = 0;
+    p[9] = 0;
+    p[10] = 0;
+    p[11] = 0;
     //8             general_level_idc
     p[12] = general_level_idc;
     //4             reserved('1111')
@@ -285,7 +327,6 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     }
  
     data = CFDataCreate(kCFAllocatorDefault, extradata, extradata_size);
-    NSLog(@"%@==%@==%@",data,sps,pps);
     free(extradata);
     return data;
 }
@@ -312,7 +353,6 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
             continue;
         }
         //获取NALUS的长度，开辟内存
-        frame_size += naluUnit.size;
         BOOL isIFrame = NO;
         if (naluUnit.type == NAL_SLICE_IDR) {
             isIFrame = YES;
@@ -329,6 +369,80 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
         free(frame_data);
     }
     
+}
+
+- (void)pushH265DataContentSpsAndPpsData:(NSData *)h265Data {
+    uint8_t *videoData = (uint8_t*)[h265Data bytes];
+    
+    NaluUnit naluUnit;
+    int frame_size = 0;
+    int cur_pos = 0;
+    
+    int lastJ = 0;
+    int lastType = 0;
+    
+    for (int i = 0; i < h265Data.length - 1; i++) {
+        //读取头
+        if (videoData[i] == 0x00 &&
+            videoData[i + 1] == 0x00 &&
+            videoData[i + 2] == 0x00 &&
+            videoData[i + 3] == 0x01) {
+            if (i >= 0) {
+                //读取类型
+                int type = (videoData[i + 4] & 0x7E)>>1;
+                int frame_size = i - lastJ;
+
+                naluUnit.type = type;
+                naluUnit.size = frame_size;
+                naluUnit.data = &videoData[lastJ];
+                
+                //填充nalu
+                if(type == H265_NAL_VPS || type == H265_NAL_SPS || type == H265_NAL_PPS || type == H265_NAL_SEI) {
+                    if (naluUnit.type == H265_NAL_SPS) {
+                        self.sps = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
+                    } else if(naluUnit.type == H265_NAL_PPS) {
+                        self.pps = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
+                    } else if(type == H265_NAL_VPS){
+                        self.vps = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
+                    }else if(type == H265_NAL_SEI){
+                        self.sei = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
+                    }else {
+                        lastJ = i;
+                        lastType = type;
+                        continue;
+                    }
+                    if (self.sps && self.pps && self.vps && self.spsAndppsWrite == NO) {
+                        [self setupH265WithSPS:self.sps PPS:self.pps vps:self.vps];
+                        self.spsAndppsWrite = YES;
+                    }
+                    lastJ = i;
+                    lastType = type;
+                    continue;
+                }
+                //填充视频数据
+                //获取NALUS的长度，开辟内存
+                BOOL isIFrame = NO;
+                if (naluUnit.type == H265_NAL_IDR) {
+                    isIFrame = YES;
+                }
+                frame_size = naluUnit.size + 4;
+                uint8_t *frame_data = (uint8_t *) calloc(1, frame_size);//avcc header 占用4个字节
+                uint32_t littleLength = CFSwapInt32HostToBig(naluUnit.size);
+                uint8_t *lengthAddress = (uint8_t*)&littleLength;
+                memcpy(frame_data, lengthAddress, 4);
+                memcpy(frame_data+4, naluUnit.data, naluUnit.size);
+                
+                [self pushH264Data:frame_data length:frame_size];
+                
+                free(frame_data);
+                
+                lastJ = i;
+                lastType = type;
+            }
+        }else if (i == h265Data.length - 1) {
+            NSLog(@"end");
+        }
+    }
 }
 
 /**
@@ -372,6 +486,37 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     return false;
 }
 
++ (BOOL)ESCReadOneNaluFromAnnexBFormatH265WithNalu:(NaluUnit *)nalu buf:(unsigned char *)buf buf_size:(NSInteger)buf_size cur_pos:(int *)cur_pos {
+    int i = *cur_pos;
+    while(i + 2 < buf_size)
+    {
+        if(buf[i] == 0x00 && buf[i+1] == 0x00 && buf[i+2] == 0x00 && buf[i+3] == 0x01) {
+            i = i + 4;
+            int pos = i;
+            while (pos + 2 < buf_size)
+            {
+                if(buf[pos] == 0x00 && buf[pos+1] == 0x00 && buf[pos+2] == 0x01)
+                    break;
+                pos++;
+            }
+            if(pos+2 == buf_size) {
+                (*nalu).size = pos+2-i;
+            } else {
+                while(buf[pos-1] == 0x00)
+                    pos--;
+                (*nalu).size = pos-i;
+            }
+            (*nalu).type = buf[i] & 0x1f;
+            (*nalu).data = buf + i;
+            *cur_pos = pos;
+            return true;
+        } else {
+            i++;
+        }
+    }
+    return false;
+}
+
 - (void)pushH264Data:(unsigned char *)dataBuffer length:(uint32_t)len{
     if (_assetWriter.status == AVAssetWriterStatusUnknown) {
         NSLog(@"_assetWriter status not ready");
@@ -381,7 +526,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     CMSampleBufferRef h264Sample = [self sampleBufferWithData:h264Data formatDescriptor:_videoFormat];
     if ([_videoWriteInput isReadyForMoreMediaData]) {
         [_videoWriteInput appendSampleBuffer:h264Sample];
-        NSLog(@"appendSampleBuffer success");
+        NSLog(@"appendSampleBuffer success == %d",len);
     } else {
         NSLog(@"_videoWriteInput isReadyForMoreMediaData NO status:%ld",(long)_assetWriter.status);
     }

@@ -41,13 +41,18 @@
     NSString *filePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"h264toMp41.mp4"];
     NSString *path = [[NSBundle mainBundle] pathForResource:@"video3" ofType:@"h264"];
     NSLog(@"%@",filePath);
-    [ESCH264FileToMp4FileTool ESCH264FileToMp4FileToolWithh264FilePath:path mp4FilePath:filePath videoWidth:1280 videoHeight:720 frameRate:25];
+//    [ESCH264FileToMp4FileTool ESCH264FileToMp4FileToolWithh264FilePath:path mp4FilePath:filePath videoWidth:1280 videoHeight:720 frameRate:25];
     
-    [self ESCH264FileToMp4FileToolWithh264FilePath:path];
+//    [self ESCH264FileShowWithh264FilePath:path];
+    
+    
+    NSString *h265Path = [[NSBundle mainBundle] pathForResource:@"test_1_640_360.h265" ofType:nil];
+    NSString *h265Mp4FilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"h265toMp41.mp4"];
+    [ESCH264FileToMp4FileTool ESCH265FileToMp4FileToolWithh264FilePath:h265Path mp4FilePath:h265Mp4FilePath videoWidth:640 videoHeight:360 frameRate:25];
 }
 
 
-- (void)ESCH264FileToMp4FileToolWithh264FilePath:(NSString *)h264FilePath {
+- (void)ESCH264FileShowWithh264FilePath:(NSString *)h264FilePath {
     
     NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath:h264FilePath];
     NSData *allData = [fileHandle readDataToEndOfFile];
