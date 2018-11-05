@@ -11,8 +11,16 @@
 
 @interface ESCH264FileToMp4FileTool : NSObject
 
-+ (void)ESCH264FileToMp4FileToolWithh264FilePath:(NSString *)h264FilePath mp4FilePath:(NSString *)mp4FilePath videoWidth:(NSInteger)width videoHeight:(NSInteger)height frameRate:(NSInteger)frameRate;
++ (void)ESCH264FileToMp4FileToolWithh264FilePath:(NSString *)h264FilePath
+                                     mp4FilePath:(NSString *)mp4FilePath
+                                      videoWidth:(NSInteger)width
+                                     videoHeight:(NSInteger)height
+                                       frameRate:(NSInteger)frameRate;
 
-+ (void)ESCH265FileToMp4FileToolWithh264FilePath:(NSString *)h265FilePath mp4FilePath:(NSString *)mp4FilePath videoWidth:(NSInteger)width videoHeight:(NSInteger)height frameRate:(NSInteger)frameRate;
++ (void)ESCH265FileToMp4FileToolWithh264FilePath:(NSString *)h265FilePath
+                                     mp4FilePath:(NSString *)mp4FilePath
+                                      videoWidth:(NSInteger)width
+                                     videoHeight:(NSInteger)height
+                                       frameRate:(NSInteger)frameRate;
 
 @end

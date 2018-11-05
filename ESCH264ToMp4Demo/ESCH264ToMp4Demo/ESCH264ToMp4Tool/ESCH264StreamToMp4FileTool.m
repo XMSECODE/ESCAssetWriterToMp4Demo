@@ -51,7 +51,7 @@ unsigned d = (darg);                    \
 
 @property(nonatomic,strong)NSData* sei;
 
-@property(nonatomic,assign)BOOL spsAndppsWrite;
+@property(nonatomic,assign)BOOL getOtherDataSuccess;    //sps pps vps sei
 
 @end
 const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
@@ -348,9 +348,9 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
             } else {
                 continue;
             }
-            if (self.sps && self.pps && self.spsAndppsWrite == NO) {
+            if (self.sps && self.pps && self.getOtherDataSuccess == NO) {
                 [self setupWithSPS:self.sps PPS:self.pps];
-                self.spsAndppsWrite = YES;
+                self.getOtherDataSuccess = YES;
             }
             continue;
         }
@@ -376,6 +376,10 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
 - (void)pushH265DataContentSpsAndPpsData:(NSData *)h265Data {
     uint8_t *videoData = (uint8_t*)[h265Data bytes];
     
+    //读取vps sps sei pps
+    
+    //插入数据
+    
     NaluUnit naluUnit;
     int frame_size = 0;
     int cur_pos = 0;
@@ -399,7 +403,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
                 naluUnit.data = &videoData[lastJ];
                 
                 //填充nalu
-                if( (type == H265_NAL_VPS || type == H265_NAL_SPS || type == H265_NAL_PPS || type == H265_NAL_SEI) && self.spsAndppsWrite == NO) {
+                if( (type == H265_NAL_VPS || type == H265_NAL_SPS || type == H265_NAL_PPS || type == H265_NAL_SEI) && self.getOtherDataSuccess == NO) {
                     if (naluUnit.type == H265_NAL_SPS) {
                         self.sps = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
                     } else if(naluUnit.type == H265_NAL_PPS) {
@@ -413,10 +417,10 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
                         lastType = type;
                         continue;
                     }
-                    if (self.sps && self.pps && self.vps && self.sei && self.spsAndppsWrite == NO) {
+                    if (self.sps && self.pps && self.vps && self.sei && self.getOtherDataSuccess == NO) {
                         [self setupH265WithSPS:self.sps PPS:self.pps vps:self.vps sei:self.sei];
-                        self.spsAndppsWrite = YES;
-                        NSLog(@"写入sps成功");
+                        self.getOtherDataSuccess = YES;
+                        NSLog(@"设置sps成功");
                         i = 0;
                     }else {
                         
@@ -549,8 +553,10 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     if ([_videoWriteInput isReadyForMoreMediaData]) {
         [_videoWriteInput appendSampleBuffer:h264Sample];
 //        NSLog(@"appendSampleBuffer success == %d",len);
+        self.frameIndex++;
     } else {
         NSLog(@"_videoWriteInput isReadyForMoreMediaData NO status:%ld",(long)_assetWriter.status);
+//        [self pushH264Data:dataBuffer length:len];
     }
     CFRelease(h264Sample);
 }
@@ -611,15 +617,16 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
         NSLog(@"CMSampleBufferCreate result:%d",result);
         return NULL;
     }
-    _frameIndex ++;
-
     // check error
-    
     return sampleBuffer;
 }
 
 - (void) endWritingCompletionHandler:(void (^)(void))handler {
      CMTime time = [self timeWithFrame:_frameIndex];
+    if (_assetWriter.status == AVAssetWriterStatusUnknown) {
+        return;
+    }
+    NSLog(@"%d",self.assetWriter.status);
     [_videoWriteInput markAsFinished];
     [_assetWriter endSessionAtSourceTime:time];
     [_assetWriter finishWritingWithCompletionHandler:^{

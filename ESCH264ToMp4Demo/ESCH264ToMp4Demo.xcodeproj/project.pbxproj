@@ -25,7 +25,7 @@
 /* Begin PBXFileReference section */
 		F0064F6720EB7B7900973C2F /* ESCH264View.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ESCH264View.h; sourceTree = "<group>"; };
 		F0064F6820EB7B7900973C2F /* ESCH264View.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ESCH264View.m; sourceTree = "<group>"; };
-		F07056B720E0815400D35E6A /* ESCH264ToMp4Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ESCH264ToMp4Demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F07056B720E0815400D35E6A /* ESCAssetWriterToMp4Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ESCAssetWriterToMp4Demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F07056BA20E0815400D35E6A /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		F07056BB20E0815400D35E6A /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		F07056BD20E0815400D35E6A /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
@@ -76,7 +76,7 @@
 		F07056B820E0815400D35E6A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				F07056B720E0815400D35E6A /* ESCH264ToMp4Demo.app */,
+				F07056B720E0815400D35E6A /* ESCAssetWriterToMp4Demo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -125,9 +125,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		F07056B620E0815400D35E6A /* ESCH264ToMp4Demo */ = {
+		F07056B620E0815400D35E6A /* ESCAssetWriterToMp4Demo */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F07056CD20E0816100D35E6A /* Build configuration list for PBXNativeTarget "ESCH264ToMp4Demo" */;
+			buildConfigurationList = F07056CD20E0816100D35E6A /* Build configuration list for PBXNativeTarget "ESCAssetWriterToMp4Demo" */;
 			buildPhases = (
 				F07056B320E0815400D35E6A /* Sources */,
 				F07056B420E0815400D35E6A /* Frameworks */,
@@ -137,9 +137,9 @@
 			);
 			dependencies = (
 			);
-			name = ESCH264ToMp4Demo;
+			name = ESCAssetWriterToMp4Demo;
 			productName = ESCH264ToMp4Demo;
-			productReference = F07056B720E0815400D35E6A /* ESCH264ToMp4Demo.app */;
+			productReference = F07056B720E0815400D35E6A /* ESCAssetWriterToMp4Demo.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -169,7 +169,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				F07056B620E0815400D35E6A /* ESCH264ToMp4Demo */,
+				F07056B620E0815400D35E6A /* ESCAssetWriterToMp4Demo */,
 			);
 		};
 /* End PBXProject section */
@@ -385,7 +385,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F07056CD20E0816100D35E6A /* Build configuration list for PBXNativeTarget "ESCH264ToMp4Demo" */ = {
+		F07056CD20E0816100D35E6A /* Build configuration list for PBXNativeTarget "ESCAssetWriterToMp4Demo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F07056CE20E0816100D35E6A /* Debug */,
