@@ -20,35 +20,43 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
     
     self.view.backgroundColor = [UIColor whiteColor];
-    UIButton *startBt = [[UIButton alloc] initWithFrame:CGRectMake(20, 20, 100, 100)];
-    [startBt setTitle:@"开始写入1" forState:UIControlStateNormal];
-    [startBt addTarget:self action:@selector(startWrite) forControlEvents:UIControlEventTouchUpInside];
-    [startBt setBackgroundColor:[UIColor blueColor]];
-    [self.view addSubview:startBt];
+    
+    UIButton *startWrite264Button = [[UIButton alloc] initWithFrame:CGRectMake(20, 20, 150, 100)];
+    [startWrite264Button setTitle:@"开始写入h264" forState:UIControlStateNormal];
+    [startWrite264Button addTarget:self action:@selector(startWriteH264) forControlEvents:UIControlEventTouchUpInside];
+    [startWrite264Button setBackgroundColor:[UIColor blueColor]];
+    [self.view addSubview:startWrite264Button];
+    
+    UIButton *startWriteH265Button = [[UIButton alloc] initWithFrame:CGRectMake(20, 150, 150, 100)];
+    [startWriteH265Button setTitle:@"开始写入h265" forState:UIControlStateNormal];
+    [startWriteH265Button addTarget:self action:@selector(startWriteH265) forControlEvents:UIControlEventTouchUpInside];
+    [startWriteH265Button setBackgroundColor:[UIColor blueColor]];
+    [self.view addSubview:startWriteH265Button];
     
     ESCH264View *h264View = [[ESCH264View alloc] init];
-    h264View.frame = CGRectMake(20, 120, 300, 300);
+    h264View.frame = CGRectMake(20, 250, 300, 300);
     h264View.videoSize = CGSizeMake(1280, 720);
     [self.view addSubview:h264View];
     self.h264View = h264View;
     
 }
 
-- (void) startWrite {
-    NSString *filePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"h264toMp41.mp4"];
-    NSString *path = [[NSBundle mainBundle] pathForResource:@"video3" ofType:@"h264"];
-    NSLog(@"%@",filePath);
-//    [ESCH264FileToMp4FileTool ESCH264FileToMp4FileToolWithh264FilePath:path mp4FilePath:filePath videoWidth:1280 videoHeight:720 frameRate:25];
-    
-//    [self ESCH264FileShowWithh264FilePath:path];
-    
-    
+- (void)startWriteH265 {
     NSString *h265Path = [[NSBundle mainBundle] pathForResource:@"test_1_640_360.h265" ofType:nil];
     NSString *h265Mp4FilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"h265toMp41.mp4"];
     [ESCH264FileToMp4FileTool ESCH265FileToMp4FileToolWithh264FilePath:h265Path mp4FilePath:h265Mp4FilePath videoWidth:640 videoHeight:360 frameRate:25];
+
+}
+
+- (void)startWriteH264 {
+    NSString *filePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"h264toMp41.mp4"];
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"video3" ofType:@"h264"];
+    NSLog(@"%@",filePath);
+    [ESCH264FileToMp4FileTool ESCH264FileToMp4FileToolWithh264FilePath:path mp4FilePath:filePath videoWidth:1280 videoHeight:720 frameRate:25];
+    
+//    [self ESCH264FileShowWithh264FilePath:path];
 }
 
 
