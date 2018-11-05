@@ -93,6 +93,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     
     if ([_assetWriter canAddInput:_videoWriteInput]) {
         [_assetWriter addInput:_videoWriteInput];
+        NSLog(@"format === %@",self.videoFormat);
     }
     _videoWriteInput.expectsMediaDataInRealTime = YES;
     _startTime = CMTimeMake(0, TIME_SCALE);
@@ -104,13 +105,13 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     };
 }
 
-- (void) setupH265WithSPS:(NSData *)sps PPS:(NSData *)pps vps:(NSData *)vps{
+- (void) setupH265WithSPS:(NSData *)sps PPS:(NSData *)pps vps:(NSData *)vps sei:(NSData *)sei{
     if (self.videoWriteInput != nil) {
         return;
     }
     
-    const CFStringRef hevcKey = CFSTR("hevc");
-    const CFDataRef hevcValue = [self hevcExtradataCreate:sps PPS:pps VPS:vps];
+    const CFStringRef hevcKey = CFSTR("hevC");
+    const CFDataRef hevcValue = [self hevcExtradataCreate:sps PPS:pps VPS:vps SEI:sei];
     const void *atomDictKeys[] = { hevcKey };
     const void *atomDictValues[] = { hevcValue };
     CFDictionaryRef atomsDict = CFDictionaryCreate(kCFAllocatorDefault, atomDictKeys, atomDictValues, 1, nil, nil);
@@ -124,6 +125,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     
     if ([_assetWriter canAddInput:_videoWriteInput]) {
         [_assetWriter addInput:_videoWriteInput];
+        NSLog(@"format === %@",self.videoFormat);
     }
     _videoWriteInput.expectsMediaDataInRealTime = YES;
     _startTime = CMTimeMake(0, TIME_SCALE);
@@ -171,9 +173,9 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     return data;
 }
 
-- (CFDataRef)hevcExtradataCreate:(NSData *)sps PPS:(NSData *) pps VPS:(NSData *)vps {
-    NSArray *extradataArray = @[vps,sps,pps];
-    int extradata_size = 23 + 15 + (int)sps.length + (int)pps.length + (int)vps.length;
+- (CFDataRef)hevcExtradataCreate:(NSData *)sps PPS:(NSData *) pps VPS:(NSData *)vps SEI:(NSData *)sei {
+    NSArray *extradataArray = @[vps,sps,pps,sei];
+    int extradata_size = 23 + 15 + (int)sps.length + (int)pps.length + (int)vps.length + (int)sei.length;
     
     CFDataRef data = NULL;
     uint8_t *p;
@@ -190,9 +192,9 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     //5
     uint8_t general_profile_idc = 0;
     //32
-    uint general_profile_compatibility_flags = 0;
+//    uint general_profile_compatibility_flags = 0;
     //48
-    uint8_t general_constraint_indicator_flags[6] = {0};
+//    uint8_t general_constraint_indicator_flags[6] = {0};
     //8
     uint8_t general_level_idc = 0;
     //12
@@ -397,7 +399,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
                 naluUnit.data = &videoData[lastJ];
                 
                 //填充nalu
-                if(type == H265_NAL_VPS || type == H265_NAL_SPS || type == H265_NAL_PPS || type == H265_NAL_SEI) {
+                if( (type == H265_NAL_VPS || type == H265_NAL_SPS || type == H265_NAL_PPS || type == H265_NAL_SEI) && self.spsAndppsWrite == NO) {
                     if (naluUnit.type == H265_NAL_SPS) {
                         self.sps = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
                     } else if(naluUnit.type == H265_NAL_PPS) {
@@ -411,9 +413,13 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
                         lastType = type;
                         continue;
                     }
-                    if (self.sps && self.pps && self.vps && self.spsAndppsWrite == NO) {
-                        [self setupH265WithSPS:self.sps PPS:self.pps vps:self.vps];
+                    if (self.sps && self.pps && self.vps && self.sei && self.spsAndppsWrite == NO) {
+                        [self setupH265WithSPS:self.sps PPS:self.pps vps:self.vps sei:self.sei];
                         self.spsAndppsWrite = YES;
+                        NSLog(@"写入sps成功");
+                        i = 0;
+                    }else {
+                        
                     }
                     lastJ = i;
                     lastType = type;
@@ -486,27 +492,43 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     return false;
 }
 
-+ (BOOL)ESCReadOneNaluFromAnnexBFormatH265WithNalu:(NaluUnit *)nalu buf:(unsigned char *)buf buf_size:(NSInteger)buf_size cur_pos:(int *)cur_pos {
+/**
+ *  从data流中读取1个NALU
+ *
+ *  @param nalu     NaluUnit
+ *  @param buf      data流指针
+ *  @param buf_size data流长度
+ *  @param cur_pos  当前位置
+ *
+ *  @return 成功 or 失败
+ */
++ (BOOL)ESCReadOneNaluFromAnnexBFormatH265WithNalu:(NaluUnit *)nalu
+                                               buf:(unsigned char *)buf
+                                          buf_size:(NSInteger)buf_size
+                                           cur_pos:(int *)cur_pos {
     int i = *cur_pos;
-    while(i + 2 < buf_size)
-    {
+    while(i + 3 < buf_size) {
+        //读起始位置
         if(buf[i] == 0x00 && buf[i+1] == 0x00 && buf[i+2] == 0x00 && buf[i+3] == 0x01) {
             i = i + 4;
             int pos = i;
-            while (pos + 2 < buf_size)
-            {
-                if(buf[pos] == 0x00 && buf[pos+1] == 0x00 && buf[pos+2] == 0x01)
+            //读截止位置
+            while (pos + 3 < buf_size) {
+                if(buf[pos] == 0x00 && buf[pos+1] == 0x00 && buf[pos+2] == 0x00 && buf[pos+3] == 0x01) {
                     break;
+                }
                 pos++;
             }
-            if(pos+2 == buf_size) {
-                (*nalu).size = pos+2-i;
+            if(pos+4 == buf_size) {
+                (*nalu).size = pos + 3 - i;
             } else {
                 while(buf[pos-1] == 0x00)
                     pos--;
                 (*nalu).size = pos-i;
             }
-            (*nalu).type = buf[i] & 0x1f;
+            
+            int type = (buf[i] & 0x7E)>>1;
+            (*nalu).type = type;
             (*nalu).data = buf + i;
             *cur_pos = pos;
             return true;
@@ -526,7 +548,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     CMSampleBufferRef h264Sample = [self sampleBufferWithData:h264Data formatDescriptor:_videoFormat];
     if ([_videoWriteInput isReadyForMoreMediaData]) {
         [_videoWriteInput appendSampleBuffer:h264Sample];
-        NSLog(@"appendSampleBuffer success == %d",len);
+//        NSLog(@"appendSampleBuffer success == %d",len);
     } else {
         NSLog(@"_videoWriteInput isReadyForMoreMediaData NO status:%ld",(long)_assetWriter.status);
     }
@@ -611,7 +633,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
 
 - (CMTime) timeWithFrame:(int) frameIndex{
     int64_t pts = (frameIndex * (1000.0 / self.frameRate)) *(TIME_SCALE/1000);
-    NSLog(@"pts:%lld",pts);
+//    NSLog(@"pts:%lld",pts);
     return CMTimeMake(pts, TIME_SCALE);
 }
 
