@@ -6,9 +6,9 @@
 //  Copyright © 2018年 xiang. All rights reserved.
 //
 
-#import "ESCH264FileToMp4FileTool.h"
+#import "ESCH264OrH265FileToMp4FileTool.h"
 
-@implementation ESCH264FileToMp4FileTool
+@implementation ESCH264OrH265FileToMp4FileTool
 
 + (void)ESCH264FileToMp4FileToolWithh264FilePath:(NSString *)h264FilePath
                                      mp4FilePath:(NSString *)mp4FilePath
@@ -16,7 +16,7 @@
                                      videoHeight:(NSInteger)height
                                        frameRate:(NSInteger)frameRate{
     
-    ESCH264StreamToMp4FileTool *h264MP4 = [[ESCH264StreamToMp4FileTool alloc] initWithVideoSize:CGSizeMake(width, height) filePath:mp4FilePath frameRate:frameRate];
+    ESCH264OrH265StreamToMp4FileTool *h264MP4 = [[ESCH264OrH265StreamToMp4FileTool alloc] initWithVideoSize:CGSizeMake(width, height) filePath:mp4FilePath frameRate:frameRate];
     NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath:h264FilePath];
     NSData *allData = [fileHandle readDataToEndOfFile];
     
@@ -31,7 +31,7 @@
                                      videoHeight:(NSInteger)height
                                        frameRate:(NSInteger)frameRate {
     
-    ESCH264StreamToMp4FileTool *h265MP4 = [[ESCH264StreamToMp4FileTool alloc] initWithVideoSize:CGSizeMake(width, height) filePath:mp4FilePath frameRate:frameRate];
+    ESCH264OrH265StreamToMp4FileTool *h265MP4 = [[ESCH264OrH265StreamToMp4FileTool alloc] initWithVideoSize:CGSizeMake(width, height) filePath:mp4FilePath frameRate:frameRate];
     NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath:h265FilePath];
     NSData *allData = [fileHandle readDataToEndOfFile];
     

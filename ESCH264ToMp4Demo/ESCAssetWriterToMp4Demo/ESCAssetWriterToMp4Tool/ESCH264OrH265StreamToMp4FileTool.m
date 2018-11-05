@@ -6,7 +6,7 @@
 //  Copyright © 2017年 LGW. All rights reserved.
 //
 
-#import "ESCH264StreamToMp4FileTool.h"
+#import "ESCH264OrH265StreamToMp4FileTool.h"
 #include <mach/mach_time.h>
 
 #define AV_W8(p, v) *(p) = (v)
@@ -21,7 +21,7 @@ unsigned d = (darg);                    \
 
 
 
-@interface ESCH264StreamToMp4FileTool()
+@interface ESCH264OrH265StreamToMp4FileTool()
 
 @property(nonatomic,assign)CMFormatDescriptionRef videoFormat;
 
@@ -56,7 +56,7 @@ unsigned d = (darg);                    \
 @end
 const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
 
-@implementation ESCH264StreamToMp4FileTool
+@implementation ESCH264OrH265StreamToMp4FileTool
 
 - (instancetype) initWithVideoSize:(CGSize) videoSize filePath:(NSString *)filePath frameRate:(NSInteger)frameRate{
     if (self = [super init]) {
@@ -339,7 +339,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     NaluUnit naluUnit;
     int frame_size = 0;
     int cur_pos = 0;
-    while([ESCH264StreamToMp4FileTool ESCReadOneNaluFromAnnexBFormatH264WithNalu:&naluUnit buf:videoData buf_size:h264Data.length cur_pos:&cur_pos]) {
+    while([ESCH264OrH265StreamToMp4FileTool ESCReadOneNaluFromAnnexBFormatH264WithNalu:&naluUnit buf:videoData buf_size:h264Data.length cur_pos:&cur_pos]) {
         if(naluUnit.type == NAL_SPS || naluUnit.type == NAL_PPS || naluUnit.type == NAL_SEI) {
             if (naluUnit.type == NAL_SPS) {
                 self.sps = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];

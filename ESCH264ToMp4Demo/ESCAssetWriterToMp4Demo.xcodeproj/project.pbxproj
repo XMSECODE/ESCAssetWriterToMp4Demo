@@ -14,12 +14,12 @@
 		F07056C420E0816100D35E6A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F07056C320E0816100D35E6A /* Assets.xcassets */; };
 		F07056C720E0816100D35E6A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F07056C520E0816100D35E6A /* LaunchScreen.storyboard */; };
 		F07056CA20E0816100D35E6A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = F07056C920E0816100D35E6A /* main.m */; };
-		F07056D220E0819900D35E6A /* ESCH264StreamToMp4FileTool.m in Sources */ = {isa = PBXBuildFile; fileRef = F07056D120E0819900D35E6A /* ESCH264StreamToMp4FileTool.m */; };
+		F07056D220E0819900D35E6A /* ESCH264OrH265StreamToMp4FileTool.m in Sources */ = {isa = PBXBuildFile; fileRef = F07056D120E0819900D35E6A /* ESCH264OrH265StreamToMp4FileTool.m */; };
 		F07056D420E081B400D35E6A /* video1.h264 in Resources */ = {isa = PBXBuildFile; fileRef = F07056D320E081B400D35E6A /* video1.h264 */; };
 		F07056D620E084D200D35E6A /* video2.h264 in Resources */ = {isa = PBXBuildFile; fileRef = F07056D520E084D100D35E6A /* video2.h264 */; };
 		F073D2E5218C27A3002BF3E9 /* test_1_640_360.h265 in Resources */ = {isa = PBXBuildFile; fileRef = F073D2E4218C27A2002BF3E9 /* test_1_640_360.h265 */; };
 		F09A322720E2143A00BB7006 /* video3.h264 in Resources */ = {isa = PBXBuildFile; fileRef = F09A322620E2143900BB7006 /* video3.h264 */; };
-		F09A322A20E2361B00BB7006 /* ESCH264FileToMp4FileTool.m in Sources */ = {isa = PBXBuildFile; fileRef = F09A322920E2361B00BB7006 /* ESCH264FileToMp4FileTool.m */; };
+		F09A322A20E2361B00BB7006 /* ESCH264OrH265FileToMp4FileTool.m in Sources */ = {isa = PBXBuildFile; fileRef = F09A322920E2361B00BB7006 /* ESCH264OrH265FileToMp4FileTool.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,14 +35,14 @@
 		F07056C620E0816100D35E6A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F07056C820E0816100D35E6A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F07056C920E0816100D35E6A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		F07056D020E0819800D35E6A /* ESCH264StreamToMp4FileTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESCH264StreamToMp4FileTool.h; sourceTree = "<group>"; };
-		F07056D120E0819900D35E6A /* ESCH264StreamToMp4FileTool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESCH264StreamToMp4FileTool.m; sourceTree = "<group>"; };
+		F07056D020E0819800D35E6A /* ESCH264OrH265StreamToMp4FileTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESCH264OrH265StreamToMp4FileTool.h; sourceTree = "<group>"; };
+		F07056D120E0819900D35E6A /* ESCH264OrH265StreamToMp4FileTool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESCH264OrH265StreamToMp4FileTool.m; sourceTree = "<group>"; };
 		F07056D320E081B400D35E6A /* video1.h264 */ = {isa = PBXFileReference; lastKnownFileType = file; path = video1.h264; sourceTree = "<group>"; };
 		F07056D520E084D100D35E6A /* video2.h264 */ = {isa = PBXFileReference; lastKnownFileType = file; path = video2.h264; sourceTree = "<group>"; };
 		F073D2E4218C27A2002BF3E9 /* test_1_640_360.h265 */ = {isa = PBXFileReference; lastKnownFileType = file; path = test_1_640_360.h265; sourceTree = "<group>"; };
 		F09A322620E2143900BB7006 /* video3.h264 */ = {isa = PBXFileReference; lastKnownFileType = file; path = video3.h264; sourceTree = "<group>"; };
-		F09A322820E2361B00BB7006 /* ESCH264FileToMp4FileTool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ESCH264FileToMp4FileTool.h; sourceTree = "<group>"; };
-		F09A322920E2361B00BB7006 /* ESCH264FileToMp4FileTool.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ESCH264FileToMp4FileTool.m; sourceTree = "<group>"; };
+		F09A322820E2361B00BB7006 /* ESCH264OrH265FileToMp4FileTool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ESCH264OrH265FileToMp4FileTool.h; sourceTree = "<group>"; };
+		F09A322920E2361B00BB7006 /* ESCH264OrH265FileToMp4FileTool.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ESCH264OrH265FileToMp4FileTool.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,7 +68,7 @@
 		F07056AE20E0815400D35E6A = {
 			isa = PBXGroup;
 			children = (
-				F07056B920E0815400D35E6A /* ESCH264ToMp4Demo */,
+				F07056B920E0815400D35E6A /* ESCAssetWriterToMp4Demo */,
 				F07056B820E0815400D35E6A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -81,11 +81,11 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		F07056B920E0815400D35E6A /* ESCH264ToMp4Demo */ = {
+		F07056B920E0815400D35E6A /* ESCAssetWriterToMp4Demo */ = {
 			isa = PBXGroup;
 			children = (
 				F0064F6A20EB808800973C2F /* ESCH264View */,
-				F0DCA67120E36094000BDA7E /* ESCH264ToMp4Tool */,
+				F0DCA67120E36094000BDA7E /* ESCAssetWriterToMp4Tool */,
 				F0DCA67020E36088000BDA7E /* source */,
 				F07056BA20E0815400D35E6A /* AppDelegate.h */,
 				F07056BB20E0815400D35E6A /* AppDelegate.m */,
@@ -97,7 +97,7 @@
 				F07056C820E0816100D35E6A /* Info.plist */,
 				F07056C920E0816100D35E6A /* main.m */,
 			);
-			path = ESCH264ToMp4Demo;
+			path = ESCAssetWriterToMp4Demo;
 			sourceTree = "<group>";
 		};
 		F0DCA67020E36088000BDA7E /* source */ = {
@@ -111,15 +111,15 @@
 			path = source;
 			sourceTree = "<group>";
 		};
-		F0DCA67120E36094000BDA7E /* ESCH264ToMp4Tool */ = {
+		F0DCA67120E36094000BDA7E /* ESCAssetWriterToMp4Tool */ = {
 			isa = PBXGroup;
 			children = (
-				F07056D020E0819800D35E6A /* ESCH264StreamToMp4FileTool.h */,
-				F07056D120E0819900D35E6A /* ESCH264StreamToMp4FileTool.m */,
-				F09A322820E2361B00BB7006 /* ESCH264FileToMp4FileTool.h */,
-				F09A322920E2361B00BB7006 /* ESCH264FileToMp4FileTool.m */,
+				F07056D020E0819800D35E6A /* ESCH264OrH265StreamToMp4FileTool.h */,
+				F07056D120E0819900D35E6A /* ESCH264OrH265StreamToMp4FileTool.m */,
+				F09A322820E2361B00BB7006 /* ESCH264OrH265FileToMp4FileTool.h */,
+				F09A322920E2361B00BB7006 /* ESCH264OrH265FileToMp4FileTool.m */,
 			);
-			path = ESCH264ToMp4Tool;
+			path = ESCAssetWriterToMp4Tool;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -156,7 +156,7 @@
 					};
 				};
 			};
-			buildConfigurationList = F07056B220E0815400D35E6A /* Build configuration list for PBXProject "ESCH264ToMp4Demo" */;
+			buildConfigurationList = F07056B220E0815400D35E6A /* Build configuration list for PBXProject "ESCAssetWriterToMp4Demo" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -198,9 +198,9 @@
 			files = (
 				F0064F6920EB7B7900973C2F /* ESCH264View.m in Sources */,
 				F07056BF20E0815400D35E6A /* ViewController.m in Sources */,
-				F09A322A20E2361B00BB7006 /* ESCH264FileToMp4FileTool.m in Sources */,
+				F09A322A20E2361B00BB7006 /* ESCH264OrH265FileToMp4FileTool.m in Sources */,
 				F07056CA20E0816100D35E6A /* main.m in Sources */,
-				F07056D220E0819900D35E6A /* ESCH264StreamToMp4FileTool.m in Sources */,
+				F07056D220E0819900D35E6A /* ESCH264OrH265StreamToMp4FileTool.m in Sources */,
 				F07056BC20E0815400D35E6A /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -343,13 +343,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = NZ6KCMA9HH;
-				INFOPLIST_FILE = ESCH264ToMp4Demo/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/ESCAssetWriterToMp4Demo/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.xiang.ESCH264ToMp4Demo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xiang.ESCAssetWriterToMp4Demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -361,13 +361,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = NZ6KCMA9HH;
-				INFOPLIST_FILE = ESCH264ToMp4Demo/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/ESCAssetWriterToMp4Demo/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.xiang.ESCH264ToMp4Demo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xiang.ESCAssetWriterToMp4Demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -376,7 +376,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		F07056B220E0815400D35E6A /* Build configuration list for PBXProject "ESCH264ToMp4Demo" */ = {
+		F07056B220E0815400D35E6A /* Build configuration list for PBXProject "ESCAssetWriterToMp4Demo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F07056CB20E0816100D35E6A /* Debug */,

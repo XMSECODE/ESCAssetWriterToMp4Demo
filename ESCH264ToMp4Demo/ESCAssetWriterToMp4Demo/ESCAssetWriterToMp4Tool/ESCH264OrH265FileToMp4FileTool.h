@@ -7,9 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "ESCH264StreamToMp4FileTool.h"
+#import "ESCH264OrH265StreamToMp4FileTool.h"
 
-@interface ESCH264FileToMp4FileTool : NSObject
+@interface ESCH264OrH265FileToMp4FileTool : NSObject
 
 + (void)ESCH264FileToMp4FileToolWithh264FilePath:(NSString *)h264FilePath
                                      mp4FilePath:(NSString *)mp4FilePath

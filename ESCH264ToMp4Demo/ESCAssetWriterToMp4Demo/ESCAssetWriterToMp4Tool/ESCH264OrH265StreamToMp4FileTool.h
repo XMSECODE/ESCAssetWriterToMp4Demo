@@ -35,7 +35,7 @@ typedef struct _NaluUnit
     unsigned char *data; //note: don't contain startCode
 } NaluUnit;
 
-@interface ESCH264StreamToMp4FileTool : NSObject
+@interface ESCH264OrH265StreamToMp4FileTool : NSObject
 
 - (instancetype)initWithVideoSize:(CGSize) videoSize filePath:(NSString *)filePath frameRate:(NSInteger)frameRate;
 
