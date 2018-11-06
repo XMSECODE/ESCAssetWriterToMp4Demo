@@ -218,7 +218,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     //2
     uint8_t lengthSizeMinusOne = 3;
     //8
-    uint8_t numOfArrays = 3;
+    uint8_t numOfArrays = 4;
     //1
     uint8_t arry_completeness = 0;
     
@@ -299,33 +299,38 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     for (int i = 0; i < numOfArrays;) {
         //1             arry_completeness
         arry_completeness = arry_completeness & 0x80;
-        p[22 + i] = arry_completeness;
+        p[23 + i] = arry_completeness;
         //1            reserved(0)
         //6             NAL_unit_type
         if (j == 0) {
             //vps
-            p[22 + i] = p[22 + i] | 0x20;
+            p[23 + i] = p[23 + i] | 0x20;
         }else if (j == 1) {
-            p[22 + i] = p[22 + i] | 0x21;
+            p[23 + i] = p[23 + i] | 0x21;
         }else if (j == 2) {
-            p[22 + i] = p[22 + i] | 0x22;
+            p[23 + i] = p[23 + i] | 0x22;
         }
         //16            numNalus
-        p[22 + i + 1] = 0x00;
-        p[22 + i + 2] = 0x01;
+        p[23 + i + 1] = 0x00;
+        p[23 + i + 2] = 0x01;
         //              --repeated once per NAL --
         NSData *naluData = extradataArray[j];
         //16            nalUnitLength
         int naluLength = (int)naluData.length;
         uint8_t naluLength_one = naluLength & 0x0000ff00;
         uint8_t naluLength_two = naluLength & 0x000000ff;
-        p[22 + i + 3] = naluLength_one;
-        p[22 + i + 4] = naluLength_two;
+        p[23 + i + 3] = naluLength_one;
+        p[23 + i + 4] = naluLength_two;
         //N             NALU data
-        const void *pNaluData = [naluData bytes];
-        memcpy(p[22 + i + 5], pNaluData, naluLength);
+        uint8_t *pNaluData = (uint8_t *)[naluData bytes];
+//        memcpy(p[23 + i + 5], pNaluData, naluLength);
+        for (int k = 0; k < naluLength; k++) {
+            p[23 + i + 5] = pNaluData[k];
+            i++;
+        }
         j++;
-        i += 1 + 2 + 2 + naluLength;
+//        i += 1 + 2 + 2 + naluLength;
+        i += 1 + 2 + 2;
     }
  
     data = CFDataCreate(kCFAllocatorDefault, extradata, extradata_size);
@@ -376,87 +381,59 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
 - (void)pushH265DataContentSpsAndPpsData:(NSData *)h265Data {
     uint8_t *videoData = (uint8_t*)[h265Data bytes];
     
-    //读取vps sps sei pps
-    
-    //插入数据
-    
     NaluUnit naluUnit;
-    int frame_size = 0;
-    int cur_pos = 0;
+    int currentPoint = 0;
     
-    int lastJ = 0;
-    int lastType = 0;
-    
-    for (int i = 0; i < h265Data.length - 1; i++) {
-        //读取头
-        if (videoData[i] == 0x00 &&
-            videoData[i + 1] == 0x00 &&
-            videoData[i + 2] == 0x00 &&
-            videoData[i + 3] == 0x01) {
-            if (i >= 0) {
-                //读取类型
-                int type = (videoData[i + 4] & 0x7E)>>1;
-                int frame_size = i - lastJ;
-
-                naluUnit.type = type;
-                naluUnit.size = frame_size;
-                naluUnit.data = &videoData[lastJ];
-                
-                //填充nalu
-                if( (type == H265_NAL_VPS || type == H265_NAL_SPS || type == H265_NAL_PPS || type == H265_NAL_SEI) && self.getOtherDataSuccess == NO) {
-                    if (naluUnit.type == H265_NAL_SPS) {
-                        self.sps = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
-                    } else if(naluUnit.type == H265_NAL_PPS) {
-                        self.pps = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
-                    } else if(type == H265_NAL_VPS){
-                        self.vps = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
-                    }else if(type == H265_NAL_SEI){
-                        self.sei = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
-                    }else {
-                        lastJ = i;
-                        lastType = type;
-                        continue;
-                    }
-                    if (self.sps && self.pps && self.vps && self.sei && self.getOtherDataSuccess == NO) {
-                        [self setupH265WithSPS:self.sps PPS:self.pps vps:self.vps sei:self.sei];
-                        self.getOtherDataSuccess = YES;
-                        NSLog(@"设置sps成功");
-                        i = 0;
-                    }else {
-                        
-                    }
-                    lastJ = i;
-                    lastType = type;
-                    continue;
-                }
-                //填充视频数据
-                //获取NALUS的长度，开辟内存
-                BOOL isIFrame = NO;
-                if (naluUnit.type == H265_NAL_IDR) {
-                    isIFrame = YES;
-                }
-                frame_size = naluUnit.size + 4;
-                uint8_t *frame_data = (uint8_t *) calloc(1, frame_size);//avcc header 占用4个字节
-                uint32_t littleLength = CFSwapInt32HostToBig(naluUnit.size);
-                uint8_t *lengthAddress = (uint8_t*)&littleLength;
-                memcpy(frame_data, lengthAddress, 4);
-                memcpy(frame_data+4, naluUnit.data, naluUnit.size);
-                
-                [self pushH264Data:frame_data length:frame_size];
-                
-                free(frame_data);
-                
-                lastJ = i;
-                lastType = type;
+    while ([ESCH264OrH265StreamToMp4FileTool ESCReadOneNaluFromAnnexBFormatH265WithNalu:&naluUnit buf:videoData buf_size:h265Data.length cur_pos:&currentPoint]) {
+        //填充nalu
+        if(( (naluUnit.type == H265_NAL_VPS || naluUnit.type == H265_NAL_SPS || naluUnit.type == H265_NAL_PPS || naluUnit.type == H265_NAL_SEI) )&& self.getOtherDataSuccess == NO) {
+            
+            NSData *data = [NSData dataWithBytes:naluUnit.data length:naluUnit.size];
+            NSLog(@"data====%@",data);
+            if (naluUnit.type == H265_NAL_SPS) {
+                self.sps = data;
+            } else if(naluUnit.type == H265_NAL_PPS) {
+                self.pps = data;
+            } else if(naluUnit.type == H265_NAL_VPS){
+                self.vps = data;
+            }else if(naluUnit.type == H265_NAL_SEI){
+                self.sei = data;
+            }else {
+                continue;
             }
-        }else if (i == h265Data.length - 1) {
-            NSLog(@"end");
+            if (self.sps && self.pps && self.vps && self.sei && self.getOtherDataSuccess == NO) {
+                [self setupH265WithSPS:self.sps PPS:self.pps vps:self.vps sei:self.sei];
+                self.getOtherDataSuccess = YES;
+                //                    currentPoint = 0;
+                NSLog(@"设置sps成功");
+            }else {
+                
+            }
+            continue;
         }
+        //填充视频数据
+        //获取NALUS的长度，开辟内存
+        BOOL isIFrame = NO;
+        if (naluUnit.type == H265_NAL_IDR) {
+            isIFrame = YES;
+        }
+        int frame_size = naluUnit.size + 4;
+        uint8_t *frame_data = (uint8_t *) calloc(1, frame_size);//avcc header 占用4个字节
+        uint32_t littleLength = CFSwapInt32HostToBig(naluUnit.size);
+        uint8_t *lengthAddress = (uint8_t*)&littleLength;
+        memcpy(frame_data, lengthAddress, 4);
+        memcpy(frame_data+4, naluUnit.data, naluUnit.size);
+        
+        [self pushH264Data:frame_data length:frame_size];
+        
+        free(frame_data);
+        
     }
+
 }
 
 /**
- *  从data流中读取1个NALU
+ *  从data流中读取1个NALU     00000001 40010c01 ffff0160 00000300 b0000003 00000300 3fac09
  *
  *  @param nalu     NaluUnit
  *  @param buf      data流指针
@@ -497,7 +474,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
 }
 
 /**
- *  从data流中读取1个NALU
+ *  从data流中读取1个NALU     40010c01 ffff0160 00000300 b0000003 00000300 3fac09
  *
  *  @param nalu     NaluUnit
  *  @param buf      data流指针
@@ -514,8 +491,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     while(i + 3 < buf_size) {
         //读起始位置
         if(buf[i] == 0x00 && buf[i+1] == 0x00 && buf[i+2] == 0x00 && buf[i+3] == 0x01) {
-            i = i + 4;
-            int pos = i;
+            int pos = i + 4;
             //读截止位置
             while (pos + 3 < buf_size) {
                 if(buf[pos] == 0x00 && buf[pos+1] == 0x00 && buf[pos+2] == 0x00 && buf[pos+3] == 0x01) {
@@ -531,7 +507,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
                 (*nalu).size = pos-i;
             }
             
-            int type = (buf[i] & 0x7E)>>1;
+            int type = (buf[i + 4] & 0x7E)>>1;
             (*nalu).type = type;
             (*nalu).data = buf + i;
             *cur_pos = pos;
@@ -549,6 +525,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
         return;
     }
     NSData *h264Data = [NSData dataWithBytes:dataBuffer length:len];
+    NSLog(@"%d===%@",h264Data.length,h264Data);
     CMSampleBufferRef h264Sample = [self sampleBufferWithData:h264Data formatDescriptor:_videoFormat];
     if ([_videoWriteInput isReadyForMoreMediaData]) {
         [_videoWriteInput appendSampleBuffer:h264Sample];
