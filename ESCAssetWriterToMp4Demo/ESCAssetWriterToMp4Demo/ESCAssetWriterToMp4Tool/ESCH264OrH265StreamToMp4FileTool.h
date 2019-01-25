@@ -39,9 +39,18 @@ typedef struct _NaluUnit
 
 - (instancetype)initWithVideoSize:(CGSize) videoSize filePath:(NSString *)filePath frameRate:(NSInteger)frameRate;
 
+- (instancetype)initWithVideoSize:(CGSize) videoSize
+                         filePath:(NSString *)filePath
+                        frameRate:(NSInteger)frameRate
+                  audioSampleRate:(int)audioSampleRate
+                    audioChannels:(int)audioChannels
+                   bitsPerChannel:(int)bitsPerChannel;
+
 - (void)pushH264DataContentSpsAndPpsData:(NSData *)h264Data;
 
 - (void)pushH265DataContentSpsAndPpsData:(NSData *)h265Data;
+
+- (void)pushAACDataContent:(NSData *)aacData;
 
 - (void)endWritingCompletionHandler:(void (^)(void))handler;
 

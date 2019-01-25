@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		F0064F6920EB7B7900973C2F /* ESCH264View.m in Sources */ = {isa = PBXBuildFile; fileRef = F0064F6820EB7B7900973C2F /* ESCH264View.m */; };
+		F03B619A21955B960033EE3C /* 8000_1_16_1.aac in Resources */ = {isa = PBXBuildFile; fileRef = F03B619721955B950033EE3C /* 8000_1_16_1.aac */; };
+		F03B619B21955B960033EE3C /* 8000_1_16.aac in Resources */ = {isa = PBXBuildFile; fileRef = F03B619821955B950033EE3C /* 8000_1_16.aac */; };
+		F03B619C21955B960033EE3C /* vocal.aac in Resources */ = {isa = PBXBuildFile; fileRef = F03B619921955B960033EE3C /* vocal.aac */; };
 		F07056BC20E0815400D35E6A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F07056BB20E0815400D35E6A /* AppDelegate.m */; };
 		F07056BF20E0815400D35E6A /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F07056BE20E0815400D35E6A /* ViewController.m */; };
 		F07056C220E0815400D35E6A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F07056C020E0815400D35E6A /* Main.storyboard */; };
@@ -25,6 +28,9 @@
 /* Begin PBXFileReference section */
 		F0064F6720EB7B7900973C2F /* ESCH264View.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ESCH264View.h; sourceTree = "<group>"; };
 		F0064F6820EB7B7900973C2F /* ESCH264View.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ESCH264View.m; sourceTree = "<group>"; };
+		F03B619721955B950033EE3C /* 8000_1_16_1.aac */ = {isa = PBXFileReference; lastKnownFileType = file; path = 8000_1_16_1.aac; sourceTree = "<group>"; };
+		F03B619821955B950033EE3C /* 8000_1_16.aac */ = {isa = PBXFileReference; lastKnownFileType = file; path = 8000_1_16.aac; sourceTree = "<group>"; };
+		F03B619921955B960033EE3C /* vocal.aac */ = {isa = PBXFileReference; lastKnownFileType = file; path = vocal.aac; sourceTree = "<group>"; };
 		F07056B720E0815400D35E6A /* ESCAssetWriterToMp4Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ESCAssetWriterToMp4Demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F07056BA20E0815400D35E6A /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		F07056BB20E0815400D35E6A /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -107,6 +113,9 @@
 				F07056D520E084D100D35E6A /* video2.h264 */,
 				F09A322620E2143900BB7006 /* video3.h264 */,
 				F073D2E4218C27A2002BF3E9 /* test_1_640_360.h265 */,
+				F03B619721955B950033EE3C /* 8000_1_16_1.aac */,
+				F03B619821955B950033EE3C /* 8000_1_16.aac */,
+				F03B619921955B960033EE3C /* vocal.aac */,
 			);
 			path = source;
 			sourceTree = "<group>";
@@ -179,7 +188,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F03B619B21955B960033EE3C /* 8000_1_16.aac in Resources */,
+				F03B619A21955B960033EE3C /* 8000_1_16_1.aac in Resources */,
 				F09A322720E2143A00BB7006 /* video3.h264 in Resources */,
+				F03B619C21955B960033EE3C /* vocal.aac in Resources */,
 				F07056C720E0816100D35E6A /* LaunchScreen.storyboard in Resources */,
 				F073D2E5218C27A3002BF3E9 /* test_1_640_360.h265 in Resources */,
 				F07056D620E084D200D35E6A /* video2.h264 in Resources */,

@@ -25,9 +25,13 @@ unsigned d = (darg);                    \
 
 @property(nonatomic,assign)CMFormatDescriptionRef videoFormat;
 
+@property(nonatomic,assign)CMFormatDescriptionRef audioFormat;
+
 @property(nonatomic,assign)CMTime startTime;
 
-@property(nonatomic,assign)int frameIndex;
+@property(nonatomic,assign)int videoFrameIndex;
+
+@property(nonatomic,assign)int audioFrameIndex;
 
 @property(nonatomic,strong)AVAssetWriterInput* videoWriteInput;
 
@@ -53,6 +57,12 @@ unsigned d = (darg);                    \
 
 @property(nonatomic,assign)BOOL getOtherDataSuccess;    //sps pps vps sei
 
+@property(nonatomic,assign)int audioSampleRate;
+
+@property(nonatomic,assign)int audioChannels;
+
+@property(nonatomic,assign)int bitsPerChannel;
+
 @end
 const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
 
@@ -73,6 +83,29 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     return self;
 }
 
+- (instancetype)initWithVideoSize:(CGSize) videoSize
+                         filePath:(NSString *)filePath
+                        frameRate:(NSInteger)frameRate
+                  audioSampleRate:(int)audioSampleRate
+                    audioChannels:(int)audioChannels
+                   bitsPerChannel:(int)bitsPerChannel {
+    if (self = [super init]) {
+        _videoSize = videoSize;
+        self.filePath = [filePath copy];
+        NSLog(@"H264ToMp4 setup start");
+        unlink([self.filePath UTF8String]);//删除该文件,c语言用法
+        [[NSFileManager defaultManager] removeItemAtPath:self.filePath error:nil];
+        NSError *error = nil;
+        NSURL *outputUrl = [NSURL fileURLWithPath:self.filePath];
+        _assetWriter = [[AVAssetWriter alloc] initWithURL:outputUrl fileType:AVFileTypeMPEG4 error:&error];
+        self.frameRate = frameRate;
+        self.audioChannels = audioChannels;
+        self.audioSampleRate = audioSampleRate;
+        self.bitsPerChannel = bitsPerChannel;
+    }
+    return self;
+}
+
 - (void) setupWithSPS:(NSData *)sps PPS:(NSData *)pps {
     if (self.videoWriteInput != nil) {
         return;
@@ -87,7 +120,8 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     const void *extensionDictKeys[] = { kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms };
     const void *extensionDictValues[] = { atomsDict };
     CFDictionaryRef extensionDict = CFDictionaryCreate(kCFAllocatorDefault, extensionDictKeys, extensionDictValues, 1, nil, nil);
-    
+//    CMVideoFormatDescriptionCreate(<#CFAllocatorRef  _Nullable allocator#>, <#CMVideoCodecType codecType#>, <#int32_t width#>, <#int32_t height#>, <#CFDictionaryRef  _Nullable extensions#>, <#CMVideoFormatDescriptionRef  _Nullable * _Nonnull formatDescriptionOut#>)
+//    CMVideoFormatDescriptionCreateFromH264ParameterSets(<#CFAllocatorRef  _Nullable allocator#>, <#size_t parameterSetCount#>, <#const uint8_t *const  _Nonnull * _Nonnull parameterSetPointers#>, <#const size_t * _Nonnull parameterSetSizes#>, <#int NALUnitHeaderLength#>, <#CMFormatDescriptionRef  _Nullable * _Nonnull formatDescriptionOut#>)
     CMVideoFormatDescriptionCreate(kCFAllocatorDefault, kCMVideoCodecType_H264, self.videoSize.width, self.videoSize.height, extensionDict, &_videoFormat);
     _videoWriteInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:nil sourceFormatHint:_videoFormat];
     
@@ -127,7 +161,32 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
         [_assetWriter addInput:_videoWriteInput];
         NSLog(@"format === %@",self.videoFormat);
     }
+
     _videoWriteInput.expectsMediaDataInRealTime = YES;
+    
+    
+    AudioStreamBasicDescription audioDescription;
+    audioDescription.mSampleRate = self.audioSampleRate;
+    audioDescription.mChannelsPerFrame = self.audioChannels;
+    audioDescription.mBitsPerChannel = self.bitsPerChannel;
+    audioDescription.mFormatID = kAudioFormatMPEG4AAC;
+    audioDescription.mFormatFlags = kAudioFormatFlagIsSignedInteger;
+    audioDescription.mFramesPerPacket = 1024;
+    audioDescription.mBytesPerFrame = audioDescription.mBitsPerChannel / 8 * audioDescription.mChannelsPerFrame;
+    audioDescription.mBytesPerPacket = audioDescription.mBytesPerFrame * audioDescription.mFramesPerPacket;
+    audioDescription.mReserved = 0;
+    
+    CMAudioFormatDescriptionRef cmAudioFormatDescriptionRef;
+    CMAudioFormatDescriptionCreate(NULL, &audioDescription, 0, NULL, 0, NULL, NULL, &cmAudioFormatDescriptionRef);
+    self.audioWriteInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:NULL sourceFormatHint:cmAudioFormatDescriptionRef];
+    self.audioFormat = cmAudioFormatDescriptionRef;
+    
+    if ([_assetWriter canAddInput:self.audioWriteInput]) {
+        [_assetWriter addInput:self.audioWriteInput];
+        NSLog(@"audioFormat format === %@",self.audioFormat);
+    }
+    _videoWriteInput.expectsMediaDataInRealTime = YES;
+    
     _startTime = CMTimeMake(0, TIME_SCALE);
     if ([_assetWriter startWriting]) {
         [_assetWriter startSessionAtSourceTime:_startTime];
@@ -371,7 +430,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
         memcpy(frame_data, lengthAddress, 4);
         memcpy(frame_data+4, naluUnit.data, naluUnit.size);
         
-        [self pushH264Data:frame_data length:frame_size];
+        [self pushVideoData:frame_data length:frame_size];
         
         free(frame_data);
     }
@@ -418,16 +477,45 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
             isIFrame = YES;
         }
         int frame_size = naluUnit.size + 4;
-        uint8_t *frame_data = (uint8_t *) calloc(1, frame_size);//avcc header 占用4个字节
+        uint8_t *frame_data = (uint8_t *) calloc(1, frame_size);
         uint32_t littleLength = CFSwapInt32HostToBig(naluUnit.size);
         uint8_t *lengthAddress = (uint8_t*)&littleLength;
         memcpy(frame_data, lengthAddress, 4);
         memcpy(frame_data+4, naluUnit.data, naluUnit.size);
         
-        [self pushH264Data:frame_data length:frame_size];
+        [self pushVideoData:frame_data length:frame_size];
         
         free(frame_data);
         
+    }
+
+}
+
+- (void)pushAACDataContent:(NSData *)aacData {
+    uint8_t *voiceData = (uint8_t*)[aacData bytes];
+    int j = 0;
+    int lastJ = 0;
+    while (j < aacData.length) {
+        if (voiceData[j] == 0xff &&
+            (voiceData[j + 1] & 0xf0) == 0xf0) {
+            if (j > 0) {
+                //0xfff判断AAC头
+                int frame_size = j - lastJ;
+                if (frame_size > 7) {
+                    NSData *aacData = [NSData dataWithBytes:&voiceData[lastJ] length:frame_size];
+                    [self pushAACData:aacData];
+                    lastJ = j;
+                }
+            }
+        }else if (j == aacData.length - 1) {
+            int frame_size = j - lastJ;
+            if (frame_size > 7) {
+                NSData *aacData = [NSData dataWithBytes:&voiceData[lastJ] length:frame_size];
+                [self pushAACData:aacData];
+                lastJ = j;
+            }
+        }
+        j++;
     }
 
 }
@@ -519,23 +607,41 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     return false;
 }
 
-- (void)pushH264Data:(unsigned char *)dataBuffer length:(uint32_t)len{
+- (void)pushVideoData:(unsigned char *)dataBuffer length:(uint32_t)len{
     if (_assetWriter.status == AVAssetWriterStatusUnknown) {
         NSLog(@"_assetWriter status not ready");
         return;
     }
-    NSData *h264Data = [NSData dataWithBytes:dataBuffer length:len];
-    NSLog(@"%d===%@",h264Data.length,h264Data);
-    CMSampleBufferRef h264Sample = [self sampleBufferWithData:h264Data formatDescriptor:_videoFormat];
+    NSData *videoData = [NSData dataWithBytes:dataBuffer length:len];
+//    NSLog(@"%ld===%@",videoData.length,videoData);
+    CMSampleBufferRef videoSample = [self sampleBufferWithData:videoData formatDescriptor:self.videoFormat];
     if ([_videoWriteInput isReadyForMoreMediaData]) {
-        [_videoWriteInput appendSampleBuffer:h264Sample];
-//        NSLog(@"appendSampleBuffer success == %d",len);
-        self.frameIndex++;
+        [_videoWriteInput appendSampleBuffer:videoSample];
+        NSLog(@"video appendSampleBuffer success == %d",len);
+        self.videoFrameIndex++;
     } else {
-        NSLog(@"_videoWriteInput isReadyForMoreMediaData NO status:%ld",(long)_assetWriter.status);
+        NSLog(@"_videoWriteInput isReadyForMoreMediaData NO status:%ld",(long)self.assetWriter.status);
 //        [self pushH264Data:dataBuffer length:len];
     }
-    CFRelease(h264Sample);
+    CFRelease(videoSample);
+}
+
+- (void)pushAACData:(NSData *)aacData{
+    if (_assetWriter.status == AVAssetWriterStatusUnknown) {
+        NSLog(@"_assetWriter status not ready");
+        return;
+    }
+//    NSLog(@"%ld===%@",aacData.length,aacData);
+    CMSampleBufferRef aacSample = [self sampleBufferWithData:aacData formatDescriptor:self.audioFormat];
+    if ([self.audioWriteInput isReadyForMoreMediaData]) {
+        [self.audioWriteInput appendSampleBuffer:aacSample];
+        NSLog(@"audio appendSampleBuffer success == %d",aacData.length);
+        self.audioFrameIndex += 1024;
+    } else {
+        NSLog(@"audio write input isReadyForMoreMediaData NO status:%ld",(long)self.assetWriter.status);
+        //        [self pushH264Data:dataBuffer length:len];
+    }
+    CFRelease(aacSample);
 }
 
 - (CMSampleBufferRef)sampleBufferWithData:(NSData*)data formatDescriptor:(CMFormatDescriptionRef)formatDescription {
@@ -570,7 +676,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
         return NULL;
     }
     const size_t sampleSizes[] = {[data length]};
-    CMTime pts = [self timeWithFrame:_frameIndex];
+    CMTime pts = [self timeWithFrame:_videoFrameIndex];
     
     CMSampleTimingInfo timeInfoArray[1] = { {
         .duration = CMTimeMake(0, 0),
@@ -599,7 +705,7 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
 }
 
 - (void) endWritingCompletionHandler:(void (^)(void))handler {
-     CMTime time = [self timeWithFrame:_frameIndex];
+     CMTime time = [self timeWithFrame:_videoFrameIndex];
     if (_assetWriter.status == AVAssetWriterStatusUnknown) {
         return;
     }

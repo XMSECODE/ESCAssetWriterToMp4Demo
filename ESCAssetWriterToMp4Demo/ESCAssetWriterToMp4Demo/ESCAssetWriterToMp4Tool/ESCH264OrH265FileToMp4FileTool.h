@@ -23,4 +23,14 @@
                                      videoHeight:(NSInteger)height
                                        frameRate:(NSInteger)frameRate;
 
++ (void)ESCH265FileAndAACFileToMp4FileToolWithh264FilePath:(NSString *)h265FilePath
+                                               aacFilePath:(NSString *)aacFilePath
+                                               mp4FilePath:(NSString *)mp4FilePath
+                                                videoWidth:(NSInteger)width
+                                               videoHeight:(NSInteger)height
+                                                 frameRate:(NSInteger)frameRate
+                                           audioSampleRate:(int)audioSampleRate
+                                             audioChannels:(int)audioChannels
+                                            bitsPerChannel:(int)bitsPerChannel;
+
 @end

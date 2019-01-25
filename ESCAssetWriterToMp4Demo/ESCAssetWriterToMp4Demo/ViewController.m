@@ -45,9 +45,11 @@
 
 - (void)startWriteH265 {
     NSString *h265Path = [[NSBundle mainBundle] pathForResource:@"test_1_640_360.h265" ofType:nil];
+    NSString *aacFilePath = [[NSBundle mainBundle] pathForResource:@"8000_1_16.aac" ofType:nil];
+    
     NSString *h265Mp4FilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"h265toMp4.mp4"];
-    [ESCH264OrH265FileToMp4FileTool ESCH265FileToMp4FileToolWithh264FilePath:h265Path mp4FilePath:h265Mp4FilePath videoWidth:640 videoHeight:360 frameRate:25];
-
+    
+    [ESCH264OrH265FileToMp4FileTool ESCH265FileAndAACFileToMp4FileToolWithh264FilePath:h265Path aacFilePath:aacFilePath mp4FilePath:h265Mp4FilePath videoWidth:640 videoHeight:360 frameRate:25 audioSampleRate:8000 audioChannels:1 bitsPerChannel:16];
 }
 
 - (void)startWriteH264 {
