@@ -37,7 +37,9 @@ typedef struct _NaluUnit
 
 @interface ESCH264OrH265StreamToMp4FileTool : NSObject
 
-- (instancetype)initWithVideoSize:(CGSize) videoSize filePath:(NSString *)filePath frameRate:(NSInteger)frameRate;
+- (instancetype)initWithVideoSize:(CGSize) videoSize
+                         filePath:(NSString *)filePath
+                        frameRate:(NSInteger)frameRate;
 
 - (instancetype)initWithVideoSize:(CGSize) videoSize
                          filePath:(NSString *)filePath
@@ -50,7 +52,7 @@ typedef struct _NaluUnit
 
 - (void)pushH265DataContentSpsAndPpsData:(NSData *)h265Data;
 
-- (void)pushAACDataContent:(NSData *)aacData;
+- (void)pushPCMDataContent:(NSData *)pcmData;
 
 - (void)endWritingCompletionHandler:(void (^)(void))handler;
 

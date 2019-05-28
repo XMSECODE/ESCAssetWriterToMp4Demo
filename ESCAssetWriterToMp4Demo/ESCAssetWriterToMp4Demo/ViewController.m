@@ -24,32 +24,44 @@
     self.view.backgroundColor = [UIColor whiteColor];
     
     UIButton *startWrite264Button = [[UIButton alloc] initWithFrame:CGRectMake(20, 20, 150, 100)];
-    [startWrite264Button setTitle:@"开始写入h264" forState:UIControlStateNormal];
+    [startWrite264Button setTitle:@"写入h264" forState:UIControlStateNormal];
     [startWrite264Button addTarget:self action:@selector(startWriteH264) forControlEvents:UIControlEventTouchUpInside];
     [startWrite264Button setBackgroundColor:[UIColor blueColor]];
     [self.view addSubview:startWrite264Button];
     
-    UIButton *startWriteH265Button = [[UIButton alloc] initWithFrame:CGRectMake(20, 150, 150, 100)];
-    [startWriteH265Button setTitle:@"开始写入h265" forState:UIControlStateNormal];
+    UIButton *startWriteH265Button = [[UIButton alloc] initWithFrame:CGRectMake(190, 20, 150, 100)];
+    [startWriteH265Button setTitle:@"写入h265" forState:UIControlStateNormal];
     [startWriteH265Button addTarget:self action:@selector(startWriteH265) forControlEvents:UIControlEventTouchUpInside];
     [startWriteH265Button setBackgroundColor:[UIColor blueColor]];
     [self.view addSubview:startWriteH265Button];
+    
+    UIButton *startWrite264AndPCMButton = [[UIButton alloc] initWithFrame:CGRectMake(20, 150, 150, 100)];
+    [startWrite264AndPCMButton setTitle:@"写入h264 pcm" forState:UIControlStateNormal];
+    [startWrite264AndPCMButton addTarget:self action:@selector(startWriteH264AndPCM) forControlEvents:UIControlEventTouchUpInside];
+    [startWrite264AndPCMButton setBackgroundColor:[UIColor blueColor]];
+    [self.view addSubview:startWrite264AndPCMButton];
+    
+    UIButton *startWriteH265AndPCMButton = [[UIButton alloc] initWithFrame:CGRectMake(190, 150, 150, 100)];
+    [startWriteH265AndPCMButton setTitle:@"写入h265 pcm" forState:UIControlStateNormal];
+    [startWriteH265AndPCMButton addTarget:self action:@selector(startWriteH265AndPCM) forControlEvents:UIControlEventTouchUpInside];
+    [startWriteH265AndPCMButton setBackgroundColor:[UIColor blueColor]];
+    [self.view addSubview:startWriteH265AndPCMButton];
     
     ESCH264View *h264View = [[ESCH264View alloc] init];
     h264View.frame = CGRectMake(20, 250, 300, 300);
     h264View.videoSize = CGSizeMake(1280, 720);
     [self.view addSubview:h264View];
     self.h264View = h264View;
-    
+
 }
 
 - (void)startWriteH265 {
     NSString *h265Path = [[NSBundle mainBundle] pathForResource:@"test_1_640_360.h265" ofType:nil];
-    NSString *aacFilePath = [[NSBundle mainBundle] pathForResource:@"8000_1_16.aac" ofType:nil];
     
     NSString *h265Mp4FilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"h265toMp4.mp4"];
     
-    [ESCH264OrH265FileToMp4FileTool ESCH265FileAndAACFileToMp4FileToolWithh264FilePath:h265Path aacFilePath:aacFilePath mp4FilePath:h265Mp4FilePath videoWidth:640 videoHeight:360 frameRate:25 audioSampleRate:8000 audioChannels:1 bitsPerChannel:16];
+    [ESCH264OrH265FileToMp4FileTool ESCH265FileToMp4FileToolWithh265FilePath:h265Path mp4FilePath:h265Mp4FilePath videoWidth:640 videoHeight:360 frameRate:25];
+    
 }
 
 - (void)startWriteH264 {
@@ -59,6 +71,23 @@
     [ESCH264OrH265FileToMp4FileTool ESCH264FileToMp4FileToolWithh264FilePath:path mp4FilePath:filePath videoWidth:1280 videoHeight:720 frameRate:25];
     
 //    [self ESCH264FileShowWithh264FilePath:path];
+}
+
+- (void)startWriteH264AndPCM {
+    NSString *mp4FilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"h264AndPCMtoMp4.mp4"];
+    NSString *pcmFilePath = [[NSBundle mainBundle] pathForResource:@"8000_1_16.pcm" ofType:nil];
+    NSString *h264path = [[NSBundle mainBundle] pathForResource:@"video3" ofType:@"h264"];
+    NSLog(@"%@",mp4FilePath);
+    [ESCH264OrH265FileToMp4FileTool ESCH264FileAndPCMFileToMp4FileToolWithh264FilePath:h264path pcmFilePath:pcmFilePath mp4FilePath:mp4FilePath videoWidth:1280 videoHeight:720 frameRate:25 audioSampleRate:8000 audioChannels:1 bitsPerChannel:16];
+}
+
+- (void)startWriteH265AndPCM {
+    NSString *h265Path = [[NSBundle mainBundle] pathForResource:@"test_1_640_360.h265" ofType:nil];
+    NSString *pcmFilePath = [[NSBundle mainBundle] pathForResource:@"8000_1_16.pcm" ofType:nil];
+    
+    NSString *h265Mp4FilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"h265AndPCMtoMp4.mp4"];
+    
+    [ESCH264OrH265FileToMp4FileTool ESCH265FileAndPCMFileToMp4FileToolWithh265FilePath:h265Path pcmFilePath:pcmFilePath mp4FilePath:h265Mp4FilePath videoWidth:640 videoHeight:360 frameRate:25 audioSampleRate:8000 audioChannels:1 bitsPerChannel:16];
 }
 
 
