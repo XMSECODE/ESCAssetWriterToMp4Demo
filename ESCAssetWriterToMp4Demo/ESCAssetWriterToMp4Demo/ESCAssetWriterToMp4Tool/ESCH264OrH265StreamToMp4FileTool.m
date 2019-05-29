@@ -732,9 +732,21 @@ const int32_t TIME_SCALE = 1000000000l;    // 1s = 1e10^9 ns
     while (1) {
         if (self.audioDataArray.count == 0) {
             if (self.pushDataIsEnd == YES) {
-                [self endRecorded];
+                if (self.videoDataArray.count > 0) {
+                    int8_t *temData = malloc(2048);
+                    for (int i = 0; i < 2048; i++) {
+                        temData[i] = 0;
+                    }
+                    NSData *temPcmData = [NSData dataWithBytes:temData length:2048];
+                    free(temData);
+                    [self.audioDataArray addObject:temPcmData];
+                }else {
+                    [self endRecorded];
+                    return;
+                }
+            }else {
+                return;
             }
-            return;
         }
         if (_assetWriter.status == AVAssetWriterStatusUnknown) {
             DLog(@"_assetWriter status not ready");
